@@ -26,6 +26,35 @@ source: https://www.odoo.com/documentation/19.0/contributing/development/coding_
        ============================================================ -->
   <workflow order="sequential">
 
+    <step id="0" name="static_precheck">
+      ## RUN THE DETERMINISTIC PRE-CHECK FIRST
+
+      Run the stdlib-only static checker before your own line-by-line pass —
+      it mechanically catches the subset of rules below that don't require
+      judgment (OI-01, OI-02, XV-04, SEC-01, SEC-03, CS-02, CS-03, NP-04's
+      `ensure_one()` check).
+
+      `checks/odoo_lint.py` lives next to this skill's `SKILL.md` — not
+      necessarily next to the user's project (skills installed with
+      `--global` live in a separate skills directory). Locate it relative to
+      wherever you read `SKILL.md` from, then run:
+
+      ```
+      python3 <skill_root>/checks/odoo_lint.py <path-to-module-or-file> --odoo-version <X>
+      ```
+
+      Its findings map onto the rule IDs in &lt;guidelines_checklist&gt; below —
+      use them as a starting checklist, then verify each one against the
+      actual code (it's a heuristic, not a verdict) before including it in
+      the report. It does NOT cover naming/structure/imports/translations —
+      those still require your own reading of the code.
+
+      This step requires an environment that can read files and run shell
+      commands, which any coding-focused assistant has. If you can't find
+      `odoo_lint.py`, or can't execute it, say so explicitly in the report
+      and rely fully on manual review — don't silently skip it.
+    </step>
+
     <step id="1" name="identify_scope">
       Before reviewing, determine:
       - What type of file is it? (Python model, XML view, JS/OWL, manifest, security)
@@ -45,6 +74,7 @@ source: https://www.odoo.com/documentation/19.0/contributing/development/coding_
       - Odoo version: [X]
       - New code or modification: [new / modification]
       - Applicable guideline sections: [list]
+      - Static pre-check findings: [N critical, N high, N medium — or "skipped: script not found/not executable"]
       - Total issues found: [N]
       ```
     </step>

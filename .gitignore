@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# odoo-dev-skill context files (see SKILL.md <context_management>)
+# Local working memory / history log — not meant to be versioned by default.
+.claude/odoo-dev-skill/

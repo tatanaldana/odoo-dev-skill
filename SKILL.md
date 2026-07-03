@@ -1,9 +1,13 @@
 ---
 name: odoo-dev-skill
 description: >
-  Universal Odoo development skill based on Odoo best practices, covering
-  versions 17-19. Uses OCA as primary reference for patterns and standards.
-  Includes agents for code review, upgrade analysis, and pattern discovery.
+  Odoo module development, code review, and version migration, covering
+  Odoo 17-19 with strict OCA standards. Use for: Odoo/OCA modules and
+  addons, ORM/models (fields, inheritance via _inherit, ir.model.*), XML
+  views (xpath, qweb, OWL components), __manifest__.py, controllers,
+  wizards, reports, cron/scheduled actions, security (ir.model.access.csv),
+  and upgrades/migrations between Odoo versions. Includes agents for code
+  review, guideline validation, upgrade analysis, and pattern discovery.
 versions: "17,18,19"
 lang: es
 ---
@@ -28,6 +32,13 @@ lang: es
 
   <!-- ============================================================
        ACTIVATION — when to load this skill
+
+       NOTE: this list is NOT what triggers invocation in Claude Code —
+       that decision is made from the frontmatter `description` above,
+       which is the only part visible before the skill body is loaded.
+       This list is the human-readable reference (and what other
+       skills.sh-compatible runners may use); keep it in sync with
+       `description` when either changes.
        ============================================================ -->
   <activation_triggers>
     odoo | module | addon | orm | model | view | owl | qweb |
@@ -126,6 +137,14 @@ lang: es
 
   </forbidden>
 
+  <note>
+    The CRITICAL rules above are checked mechanically, not just by memory:
+    `checks/odoo_lint.py` runs inside the review agents, and the optional
+    `hooks/odoo_edit_guard.py` PostToolUse hook flags CRITICAL issues right
+    after a file is edited. See README.md "Static pre-check" and "Real-time
+    CRITICAL feedback" sections for wiring.
+  </note>
+
 
   <!-- ============================================================
        CRITICAL WORKFLOW — execute IN ORDER, no exceptions
@@ -181,87 +200,38 @@ lang: es
 
       <rules>
         <rule domain="python">
-          Follow PEP8. Apply SOLID, DRY and KISS principles.
-          Always use super() in overridden methods.
-          No utf-8 header.
+          Follow PEP8. Apply SOLID, DRY and KISS principles (full SOLID
+          breakdown lives in agents/odoo-code-reviewer.md, used at review
+          time). Always use super() without arguments. No utf-8 header.
+          Imports: stdlib → odoo core → odoo addons, alphabetical within
+          each group.
 
-          Imports order (alphabetically sorted inside each group):
-          1. Python standard library
-          2. Odoo core (from odoo import api, fields, models, ...)
-          3. Odoo addons (only if strictly necessary)
-
-          Method naming conventions:
-          - Compute : _compute_field_name
-          - Search  : _search_field_name
-          - Default : _default_field_name
-          - Selection: _selection_field_name
-          - Onchange: _onchange_field_name
-          - Constraint: _check_constraint_name
-          - Action  : action_name + self.ensure_one() as first line
+          Method naming: _compute_/_search_/_default_/_selection_/_onchange_/
+          _check_ prefixes match their decorator; action_ methods call
+          self.ensure_one() as their first line.
         </rule>
 
         <rule domain="javascript">
-          Modern ES6+ only. Use strict mode.
-          OWL version by Odoo major release: v17-18-19 → OWL 2.x (OWL 3.x expected in v20)
-          Use Pascal case for class declarations.
-          Each component in its own file with a meaningful name.
+          Modern ES6+, strict mode, PascalCase classes, one component per file.
+          See skills/odoo-owl-components-{version}.md for OWL specifics.
         </rule>
 
         <rule domain="xml">
-          Always use invisible= for dynamic visibility (attrs= removed in v17).
-          Always inherit views using xpath — never replace entire views.
-          Always verify that XML IDs exist before referencing them.
-
-          XML ID naming conventions:
-          - View   : model_name_view_type (e.g. sale_order_view_form)
-          - Action : model_name_action (e.g. sale_order_action)
-          - Menu   : model_name_menu (e.g. sale_order_menu)
-          - Group  : module_name_group_name (e.g. sale_group_manager)
-          - Rule   : model_name_rule_group (e.g. sale_order_rule_user)
-
-          Inherited view names must contain .inherit.module_name suffix.
+          invisible= for dynamic visibility (never attrs=, removed in v17).
+          Always inherit with xpath, never replace a view. Full naming
+          conventions and xpath patterns: skills/xml-view-patterns.md.
         </rule>
 
         <rule domain="security">
           ir.model.access.csv is REQUIRED for every new model — no exceptions.
-          User groups defined in module_groups.xml.
-          Record rules defined in model_security.xml.
+          Full group/record-rule conventions: skills/odoo-security-guide-{version}.md.
         </rule>
 
         <rule domain="performance">
-          - Avoid iterating over records when ORM provides vectorized equivalent
-            (read_group, search_count, mapped, filtered)
-          - Use index=True on fields frequently used in search/domain filters
-          - Prefer search_read with explicit field list over search() + field access
-          - Never use search() + field-by-field access (N+1 pattern)
+          Avoid N+1 patterns (search()/browse() per record) — use mapped()/
+          filtered()/read_group(). Full checklist: skills/odoo-performance-guide.md.
         </rule>
       </rules>
-
-      <solid_principles note="Required as a code review criterion">
-        <principle letter="S" name="Single Responsibility">
-          A business method should perform only one responsibility. Split
-          validation, calculations and side effects into separate methods.
-        </principle>
-
-        <principle letter="O" name="Open/Closed">
-          Extend functionality through inheritance (_inherit).
-          Never modify the original module.
-        </principle>
-
-        <principle letter="L" name="Liskov Substitution">
-          When overriding an inherited method, the implementation must continue
-          to satisfy the contract expected by the original field or method.
-        </principle>
-
-        <principle letter="I" name="Interface Segregation">
-          Design mixins so that models inherit only the methods they actually need.
-        </principle>
-
-        <principle letter="D" name="Dependency Inversion">
-          Depend on ORM services (self.env['model']) rather than coupling to
-          concrete implementations or hardcoded IDs.
-        </principle>
-      </solid_principles>
     </step>
 
     <step id="4" name="agents">
@@ -275,6 +245,43 @@ lang: es
     </step>
 
   </critical_workflow>
+
+
+  <!-- ============================================================
+       CONTEXT MANAGEMENT — session memory and historical log
+       Not a sequential step. Applies across all tasks, all versions.
+       Full lifecycle, templates, and hook wiring:
+       examples/context-session-and-history.md — kept out of this file to
+       avoid loading the full spec on every activation.
+       ============================================================ -->
+  <context_management>
+
+    <rule>
+      For multi-turn tasks (skip for single-turn/trivial requests), keep
+      working memory at `.claude/odoo-dev-skill/context_session.xml` — task,
+      patterns loaded, files touched, decisions — capped at ~12,000 chars
+      (compress `&lt;decisions&gt;`/`&lt;files_touched&gt;` rather than truncate).
+      On finishing, append a compact `&lt;session&gt;` summary to the append-only
+      `.claude/odoo-dev-skill/history_context.xml` (never rewrite past
+      entries) — it's the audit trail and future fine-tuning/RAG source for
+      this skill. Templates: `templates/context_session.xml`,
+      `templates/history_context.xml`.
+    </rule>
+
+    <forbidden>
+      <never severity="HIGH">Store secrets or full customer data in either file.</never>
+      <never severity="MEDIUM">Rewrite or delete past &lt;session&gt; entries in history_context.xml.</never>
+    </forbidden>
+
+    <note>
+      `hooks/context_session_guard.py` is an optional, Claude-Code-specific
+      Stop hook that enforces this mechanically instead of relying on the
+      model remembering. Add `.claude/odoo-dev-skill/` to `.gitignore`
+      unless the team wants a shared audit trail. Full details:
+      `examples/context-session-and-history.md`.
+    </note>
+
+  </context_management>
 
 
   <!-- ============================================================
@@ -309,6 +316,13 @@ lang: es
     <rules>
       <rule>Always read the version-specific file before generating code. Never guess syntax — if unsure, read the file first.</rule>
     </rules>
+
+    <note>
+      This version window (17-19) is intentionally frozen between refreshes,
+      not updated on every Odoo release. See `MAINTENANCE.md` at the repo
+      root for the refresh cadence, the current trigger point for the next
+      update, and the checklist to run when it fires.
+    </note>
 
     <versioned_families available_versions="17,18,19" files_per_family="5">
       odoo-version-knowledge

@@ -17,6 +17,35 @@ description: Comprehensive Odoo module code reviewer for quality, security, perf
        ============================================================ -->
   <workflow order="sequential">
 
+    <step id="0" name="static_precheck">
+      ## RUN THE DETERMINISTIC PRE-CHECK FIRST
+
+      Before your own analysis, run the stdlib-only static checker so
+      mechanically-detectable issues (raw SQL, `attrs=`, missing
+      `ensure_one()`, `browse()`/`search()` in loops, manual commit/rollback,
+      missing `ir.model.access.csv` rows, `super()` with args, `print()`) are
+      never missed just because a pass forgot to check for them by hand.
+
+      `checks/odoo_lint.py` lives next to this skill's `SKILL.md` — not
+      necessarily next to the user's project (skills installed with
+      `--global` live in a separate skills directory). Locate it relative to
+      wherever you read `SKILL.md` from, then run:
+
+      ```
+      python3 <skill_root>/checks/odoo_lint.py <path-to-module-or-file> --odoo-version <X>
+      ```
+
+      Treat its findings as candidates, not verdicts — merge them into
+      <review_categories> below and confirm each one against the actual code
+      before including it in the report (the script does not understand
+      intent, e.g. a `search()` inside a loop that's genuinely needed).
+
+      This step requires an environment that can read files and run shell
+      commands, which any coding-focused assistant has. If you can't find
+      `odoo_lint.py`, or can't execute it, say so explicitly in the report
+      and fall back to a fully manual review — don't silently skip it.
+    </step>
+
     <step id="1" name="reasoning_block">
       ## OUTPUT THIS ANALYSIS BEFORE THE REVIEW
 
@@ -25,6 +54,7 @@ description: Comprehensive Odoo module code reviewer for quality, security, perf
       - Odoo version detected: [X]
       - Files to review: [list]
       - Version-specific checks active: [list breaking changes for this version]
+      - Static pre-check findings: [N critical, N high, N medium — or "skipped: script not found/not executable"]
       - Skills loaded: [list]
       ```
     </step>
@@ -32,7 +62,8 @@ description: Comprehensive Odoo module code reviewer for quality, security, perf
     <step id="2" name="systematic_review">
       ## SYSTEMATIC REVIEW — all categories below
 
-      Review each component category in order.
+      Review each component category in order, folding in confirmed findings
+      from the static pre-check where they match a category.
       See <review_categories> for the full checklist per category.
     </step>
 
@@ -104,6 +135,14 @@ description: Comprehensive Odoo module code reviewer for quality, security, perf
       <check>Unit tests present</check>
       <check>Security tests</check>
       <check>Edge cases covered</check>
+    </category>
+
+    <category id="solid" title="SOLID Principles">
+      <check letter="S" name="Single Responsibility">A business method performs only one responsibility — validation, calculation and side effects are split into separate methods.</check>
+      <check letter="O" name="Open/Closed">Functionality is extended through inheritance (_inherit), never by modifying the original module.</check>
+      <check letter="L" name="Liskov Substitution">Overridden methods still satisfy the contract expected by the original field/method.</check>
+      <check letter="I" name="Interface Segregation">Mixins are designed so models inherit only the methods they actually need.</check>
+      <check letter="D" name="Dependency Inversion">Code depends on ORM services (self.env['model']) rather than concrete implementations or hardcoded IDs.</check>
     </category>
 
   </review_categories>

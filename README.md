@@ -66,6 +66,10 @@ odoo-development-skill/
 │   ├── odoo-upgrade-analyzer.md          # Migration analysis between versions
 │   ├── odoo-skill-finder.md              # Navigate the pattern library
 │   └── odoo-coding-guidelines-validator.md  # Validate against official Odoo guidelines
+├── examples/                              # Sample prompts for each agent/pattern
+├── templates/                             # context_session.xml / history_context.xml starters
+├── checks/                                # odoo_lint.py — stdlib-only static pre-check
+├── hooks/                                 # optional Claude Code Stop hook (context discipline)
 └── skills/                               # 55 pattern files (families + dispatchers)
     ├── odoo-version-knowledge.md         # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
     ├── odoo-model-patterns.md            # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
@@ -176,6 +180,55 @@ User on v17 → apply v17 API (e.g. @odoo-module required, oe_chatter div)
 | Skill Discovery | `agents/odoo-skill-finder.md` | Navigate the pattern library |
 | Guidelines Validator | `agents/odoo-coding-guidelines-validator.md` | Validate against official Odoo v19 guidelines |
 
+### Static pre-check (`checks/odoo_lint.py`)
+
+Both `odoo-code-reviewer` and `odoo-coding-guidelines-validator` run this
+stdlib-only Python script *before* their own analysis. It mechanically
+catches what doesn't require judgment — raw SQL (`cr.execute`), possible SQL
+injection, `attrs=` in views, missing `self.ensure_one()`, `browse()`/
+`search()` inside loops, manual `cr.commit()`/`cr.rollback()`, `super()` with
+arguments, `print()`, and models missing an `ir.model.access.csv` entry —
+so those don't slip through just because a review pass forgot to look for
+them. It never blocks anything (exit code is always 0); its output is a
+checklist of candidates for the agent to confirm, not a verdict.
+
+```bash
+python3 /path/to/odoo-dev-skill/checks/odoo_lint.py path/to/module --odoo-version 18
+python3 /path/to/odoo-dev-skill/checks/odoo_lint.py path/to/module --format json   # for programmatic use
+```
+
+> **Requires an assistant that can read files and run shell commands** —
+> the norm for coding-focused agents (Claude Code, Cursor, Windsurf, Cline
+> in agent mode), but not guaranteed by every `skills.sh`-compatible
+> surface. `checks/` and `hooks/` are the only parts of this skill with that
+> requirement; everything else is plain markdown/XML instructions that work
+> anywhere the skill can be loaded as context. If an agent can't find or run
+> the script, it degrades to a fully manual review instead of failing.
+
+### Real-time CRITICAL feedback (`hooks/odoo_edit_guard.py`)
+
+An optional, Claude-Code-specific `PostToolUse` hook that runs
+`checks/odoo_lint.py` against a file right after it's edited — not the whole
+project, just that file — and only interrupts the assistant when a
+**CRITICAL** issue was just introduced (SQL injection, raw SQL, manual
+commit/rollback, `attrs=`). HIGH/MEDIUM findings are left for the full
+review agents so this doesn't turn into friction on every keystroke. It
+locates `odoo_lint.py` next to itself (via `__file__`), so it works
+regardless of where the skill was installed:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "python3 /absolute/path/to/odoo-dev-skill/hooks/odoo_edit_guard.py" }]
+      }
+    ]
+  }
+}
+```
+
 ### Guidelines Validator — what it checks
 
 | Section | Rules | What it validates |
@@ -228,6 +281,39 @@ Official rule: "Never use the database cursor directly when the ORM can do the s
 
 ---
 
+## Examples
+
+See [`examples/`](examples/) for sample prompts organized by scenario — new models,
+inheritance, views, wizards, controllers, migrations, and one file per agent — plus a
+[bad-vs-good comparison](examples/bad-vs-good-prompts.md) showing how prompt phrasing
+affects which pattern file the skill loads, and
+[XML-structured prompts](examples/xml-structured-prompts.md) for developers who want
+unambiguous, machine-parseable specs instead of prose.
+
+---
+
+## Context Management (session memory & history log)
+
+`SKILL.md` defines a convention — under `<context_management>` — for two files that
+track the assistant's work over time:
+
+- **`context_session.xml`** — working memory for the current task only, capped at
+  ~12,000 characters. Read at the start of a session to resume prior context; updated
+  incrementally as work progresses.
+- **`history_context.xml`** — an append-only log, one compact entry per finished
+  session. This is what makes the assistant's work auditable over time, and is intended
+  as the raw material for a future fine-tuning or RAG dataset built on real usage.
+
+Blank starters live in [`templates/`](templates/); a full walkthrough with filled-in
+examples and prompts is in
+[`examples/context-session-and-history.md`](examples/context-session-and-history.md).
+An optional, Claude-Code-specific Stop hook
+([`hooks/context_session_guard.py`](hooks/context_session_guard.py)) enforces the
+convention mechanically — blocking the assistant from stopping when the session file
+is stale or over budget — instead of relying purely on the model remembering.
+
+---
+
 ## Version Coverage
 
 | Odoo Version | Status | OWL | Key Breaking Changes |
@@ -237,6 +323,10 @@ Official rule: "Never use the database cursor directly when the ORM can do the s
 | 19 | Covered | 2.x | `models.Constraint()` \| `models.Index()` \| `SQL` from `odoo.tools` \| `Domain` class \| `self.env._()` |
 
 > Versions 15 and 16 were excluded — the breaking changes between v16 and v17 are significant enough that mixing them would reduce code quality rather than improve it.
+
+This coverage window is intentionally frozen between refreshes — see
+[`MAINTENANCE.md`](MAINTENANCE.md) for the update policy (batch refresh every 2 new
+Odoo major releases) and the current trigger point for the next one.
 
 ---
 
