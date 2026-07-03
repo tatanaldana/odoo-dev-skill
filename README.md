@@ -20,13 +20,15 @@ This repository is a fork and adaptation of the Odoo plugin from [letzdoo/claude
 
 ## Installation
 
-### End users — install via npx
+### Step 1 — Install the skill globally (once)
 
 ```bash
 npx github:tatanaldana/odoo-dev-skill
 ```
 
-This copies `SKILL.md`, `agents/`, and `skills/` into both `~/.claude/skills/odoo-dev-skill/` and `~/.agents/skills/odoo-dev-skill/`. No manual steps required.
+This copies `SKILL.md`, `agents/`, `skills/`, `hooks/`, and `templates/` into
+`~/.claude/skills/odoo-dev-skill/` and `~/.agents/skills/odoo-dev-skill/`.
+Claude Code picks up the skill automatically in every project from this point on.
 
 Options:
 
@@ -41,11 +43,33 @@ npx github:tatanaldana/odoo-dev-skill --target agents
 npx github:tatanaldana/odoo-dev-skill --dry-run
 ```
 
-Once installed, Claude Code automatically reads `SKILL.md` when Odoo-related tasks are detected. Invoke the skill explicitly with:
+### Step 2 — Initialize hooks in each Odoo project (once per project)
 
+The skill works without this step, but the enforcement hooks
+(`context_session_guard.py` and `odoo_edit_guard.py`) require a one-time
+setup per project. Run this from the **root of each Odoo project**:
+
+```bash
+cd /path/to/my-odoo-project
+npx github:tatanaldana/odoo-dev-skill init
 ```
-/odoo-dev-skill
+
+Then **restart Claude Code** so it picks up the new hooks.
+
+What `init` does:
+- Resolves the absolute path to the globally installed hooks
+- Creates `.claude/settings.json` if it does not exist, or merges the hooks
+  into it if it does — never overwrites existing keys
+- Works on Linux, macOS, and Windows
+
+```bash
+# Preview what would be written without touching anything
+npx github:tatanaldana/odoo-dev-skill init --dry-run
 ```
+
+> **Note:** You only need to run `init` once per project. The global install
+> is done once for all projects. When you start a new Odoo project, `cd` into
+> it and run `init` again before your first Claude Code session.
 
 ### Local development — clone and link
 
@@ -54,11 +78,20 @@ If you want to edit the skill and see changes immediately without reinstalling:
 ```bash
 git clone https://github.com/tatanaldana/odoo-dev-skill
 cd odoo-dev-skill
-chmod +x scripts/link-skills.sh
-./scripts/link-skills.sh
+chmod +x link_skills.sh
+./link_skills.sh
 ```
 
-This creates symlinks from `~/.claude/skills/odoo-dev-skill/` and `~/.agents/skills/odoo-dev-skill/` to your local repo. Any edit to `agents/` or `skills/` is picked up by Claude Code immediately.
+This creates symlinks from `~/.claude/skills/odoo-dev-skill/` and
+`~/.agents/skills/odoo-dev-skill/` to your local repo. Any edit to `agents/`,
+`skills/`, or `hooks/` is picked up by Claude Code immediately.
+
+Then run `init` in each project as usual:
+
+```bash
+cd /path/to/my-odoo-project
+npx github:tatanaldana/odoo-dev-skill init
+```
 
 ---
 

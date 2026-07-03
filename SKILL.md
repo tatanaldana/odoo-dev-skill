@@ -161,40 +161,77 @@ Versioned families (prefer version-specific file when it exists):
 This section defines the agent's automatic behavior — no special prompts
 required from the user.
 
-**At the start of every task**, check `.claude/odoo-dev-skill/context_session.xml`:
+### Step 1 — Resolve the skill installation path (once per task)
+
+Determine the absolute path to the installed skill. Used only to construct
+the warning message in Step 2 if hooks are missing.
+
+| Platform | Path |
+|---|---|
+| Linux / macOS | `$HOME/.claude/skills/odoo-dev-skill` |
+| Windows | `%USERPROFILE%\.claude\skills\odoo-dev-skill` |
+
+If the environment variable is unavailable, omit the path from the warning
+and direct the user to run `npx github:tatanaldana/odoo-dev-skill init`
+from the project root.
+
+### Step 2 — Verify hooks are configured in this project
+
+Read `.claude/settings.json` in the project root and check whether the
+odoo-dev-skill hooks (`context_session_guard.py`, `odoo_edit_guard.py`)
+are already declared.
+
+- **Both hooks present** → proceed silently.
+- **File missing or hooks absent** → inform the user once, clearly and briefly,
+  then continue working normally without blocking:
+
+> "Los hooks de odoo-dev-skill no están configurados en este proyecto.
+> Para activarlos desde la próxima sesión de Claude Code, ejecuta este
+> comando desde la raíz del proyecto y reinicia Claude Code:
+> `npx github:tatanaldana/odoo-dev-skill init`"
+
+Do not write or modify `settings.json` — that is the responsibility of the
+`init` command. Do not repeat this warning on subsequent prompts in the
+same session.
+```
+
+### Step 3 — Load or initialize `context_session.xml`
+
+Check `.claude/odoo-dev-skill/context_session.xml`:
 - Exists, same task → read once and resume; do not re-ask answered questions.
 - Exists, different task → ask the user before overwriting.
-- Does not exist → create it from `templates/context_session.xml`, filling
+- Does not exist → create `.claude/odoo-dev-skill/` directory if needed, then
+  create `context_session.xml` from `templates/context_session.xml`, filling
   `id` (short slug), `started` (ISO timestamp), and `odoo_version`.
 
-**During the task**, hold state in memory. Write `context_session.xml` only
-at **logical checkpoints** — a coherent unit of work complete (model + its
-views, not file by file). Set `status="checkpoint"` on that write.
-Never re-read the file between checkpoints; one read at session start is enough.
+### During the task
 
-**Status lifecycle** — the Stop hook reads this attribute to decide what to do:
+Hold state in memory. Write `context_session.xml` only at **logical
+checkpoints** — a coherent unit of work complete (model + its views, not file
+by file). Set `status="checkpoint"` on that write. Never re-read the file
+between checkpoints; one read at session start is enough.
+
+**Before responding**, if the user's message signals task completion, set
+`status="completed"` and write `context_session.xml` — do not wait for the
+Stop hook to do it. The hook is a safety net, not the primary mechanism.
+
+**Status lifecycle:**
 
 | status | When the agent sets it | What the Stop hook does |
 |---|---|---|
-| `in_progress` | Default; task active, more prompts expected | Checks budget + stale files; blocks if either fails |
-| `checkpoint` | Just finished a logical block | Allows stop cleanly; no stale-file check |
-| `completed` | User signalled end of task | Archives to `history_context.xml`, resets file, allows stop |
+| `in_progress` | Default; task active | Checks budget + stale files; blocks if either fails |
+| `checkpoint` | Logical block just finished | Allows stop cleanly |
+| `completed` | Agent detected task end | Archives to `history_context.xml`, resets file, allows stop |
 
-**Signals that indicate `completed`** — detect naturally without waiting for
-an explicit command:
-- Explicit: "terminamos", "listo", "perfecto así", "esto es todo", "abre el PR"
-- Implicit: user requests a full module review, asks to generate the final
+**Signals that indicate `completed`** — detect naturally:
+- Explicit: "terminamos", "listo", "perfecto así", "esto es todo", "abre el PR",
+  "mergea", "done", "ship it", "that's all"
+- Implicit: user requests full module review, asks to generate the final
   `__manifest__.py` with all files listed, or asks to run the linter on the
   whole module.
 
 Keep `context_session.xml` under ~12,000 characters. Compress `<decisions>`
-and `<files_touched>` into denser summaries if it grows too large before
-the next checkpoint write.
-
-The Stop hook (`hooks/context_session_guard.py`) and PostToolUse hook
-(`hooks/odoo_edit_guard.py`) enforce this mechanically in Claude Code.
-Wire them in the project's `.claude/settings.json` using the **absolute path**
-to the installed skill (e.g. `~/.claude/skills/odoo-dev-skill/hooks/`).
+and `<files_touched>` into denser summaries if it grows too large.
 
 ---
 
