@@ -156,6 +156,48 @@ Versioned families (prefer version-specific file when it exists):
 
 ---
 
+## Context management
+
+This section defines the agent's automatic behavior — no special prompts
+required from the user.
+
+**At the start of every task**, check `.claude/odoo-dev-skill/context_session.xml`:
+- Exists, same task → read once and resume; do not re-ask answered questions.
+- Exists, different task → ask the user before overwriting.
+- Does not exist → create it from `templates/context_session.xml`, filling
+  `id` (short slug), `started` (ISO timestamp), and `odoo_version`.
+
+**During the task**, hold state in memory. Write `context_session.xml` only
+at **logical checkpoints** — a coherent unit of work complete (model + its
+views, not file by file). Set `status="checkpoint"` on that write.
+Never re-read the file between checkpoints; one read at session start is enough.
+
+**Status lifecycle** — the Stop hook reads this attribute to decide what to do:
+
+| status | When the agent sets it | What the Stop hook does |
+|---|---|---|
+| `in_progress` | Default; task active, more prompts expected | Checks budget + stale files; blocks if either fails |
+| `checkpoint` | Just finished a logical block | Allows stop cleanly; no stale-file check |
+| `completed` | User signalled end of task | Archives to `history_context.xml`, resets file, allows stop |
+
+**Signals that indicate `completed`** — detect naturally without waiting for
+an explicit command:
+- Explicit: "terminamos", "listo", "perfecto así", "esto es todo", "abre el PR"
+- Implicit: user requests a full module review, asks to generate the final
+  `__manifest__.py` with all files listed, or asks to run the linter on the
+  whole module.
+
+Keep `context_session.xml` under ~12,000 characters. Compress `<decisions>`
+and `<files_touched>` into denser summaries if it grows too large before
+the next checkpoint write.
+
+The Stop hook (`hooks/context_session_guard.py`) and PostToolUse hook
+(`hooks/odoo_edit_guard.py`) enforce this mechanically in Claude Code.
+Wire them in the project's `.claude/settings.json` using the **absolute path**
+to the installed skill (e.g. `~/.claude/skills/odoo-dev-skill/hooks/`).
+
+---
+
 ## Agents
 
 To invoke an agent, Read its file and follow its workflow:
