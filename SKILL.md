@@ -25,14 +25,15 @@ proceed directly to [Simple task workflow](#simple-task-workflow).
 
 **Complex** — new module, new model, migration between versions, multiple
 files, or architectural decision:
-invoke `agents/odoo-context-gatherer.md` and let it drive from there.
+Read `agents/odoo-context-gatherer.md` and follow its workflow.
 
 ---
 
 ## Simple task workflow
 
 1. Check the [Forbidden rules](#forbidden-rules) before writing any line.
-2. Look up the relevant file in the [Pattern index](#pattern-index).
+2. Read the relevant file from the [Pattern index](#pattern-index) using
+   the Read tool before writing any code.
 3. Apply [Development standards](#development-standards).
 4. Write the code.
 
@@ -117,7 +118,7 @@ Migration guides: `skills/{pattern}-17-18.md`, `skills/{pattern}-18-19.md`
 
 ## Pattern index
 
-Load only the file you need — do not preload.
+Read the relevant file using the Read tool before writing any code.
 
 | Keywords | File |
 |----------|------|
@@ -136,7 +137,7 @@ Load only the file you need — do not preload.
 | controller, http route, api endpoint, rest, json-rpc | `skills/controller-api-patterns.md` |
 | external api, webhook, sync, xml-rpc | `skills/external-api-patterns.md` |
 | portal, token, share link, CustomerPortal | `skills/portal-access-patterns.md` |
-| fastapi, rest api, pydantic, openapi, swagger, oca api | `skills/fastapi-patterns.md` |
+| fastapi, pydantic, openapi, swagger, oca api | `skills/fastapi-patterns.md` |
 | multi-company, res.company, company_ids, with_company | `skills/multi-company-patterns.md` |
 | inherit, extend, override, _inherit, _inherits | `skills/inheritance-patterns.md` |
 | assets, javascript, css, scss, bundle | `skills/assets-bundling-patterns.md` |
@@ -157,10 +158,9 @@ Versioned families (prefer version-specific file when it exists):
 
 ## Agents
 
-| Agent | File | Use when |
-|-------|------|----------|
-| Context Gatherer | `agents/odoo-context-gatherer.md` | Complex tasks — invoked automatically |
-| Code Reviewer | `agents/odoo-code-reviewer.md` | Quality and security audits |
-| Upgrade Analyzer | `agents/odoo-upgrade-analyzer.md` | Migration between versions |
-| Skill Finder | `agents/odoo-skill-finder.md` | Precise pattern lookup |
-| Guidelines Validator | `agents/odoo-coding-guidelines-validator.md` | Validate against official Odoo coding guidelines |
+To invoke an agent, Read its file and follow its workflow:
+
+- Code review or security audit → Read `agents/odoo-code-reviewer.md`
+- Migration between versions → Read `agents/odoo-upgrade-analyzer.md`
+- Precise pattern lookup → Read `agents/odoo-skill-finder.md`
+- Guidelines validation → Read `agents/odoo-coding-guidelines-validator.md`
