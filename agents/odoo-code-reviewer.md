@@ -1,243 +1,285 @@
 ---
 name: odoo-code-reviewer
-description: Comprehensive Odoo module code reviewer for quality, security, performance, and version compliance. Use for any Odoo code review or audit task.
+description: Odoo module code review — quality, security, performance, and version compliance.
+disable-model-invocation: true
 ---
 
-<agent>
+Review Odoo module code systematically across all categories below.
+Do not generate new code — use `odoo-context-gatherer` for that.
 
-  <use_when>
-    Use when the user requests a code review, quality audit,
-    security check, or version compliance validation in Odoo modules.
-    Do NOT use for generating new code — use odoo-context-gatherer instead.
-  </use_when>
+---
 
+## Step 1 — Reasoning block
 
-  <!-- ============================================================
-       WORKFLOW — execute IN ORDER
-       ============================================================ -->
-  <workflow order="sequential">
+Output this before the review:
 
-    <step id="0" name="static_precheck">
-      ## RUN THE DETERMINISTIC PRE-CHECK FIRST
+```
+REVIEW ANALYSIS:
+- Odoo version: [X]
+- Files to review: [list]
+- Version-specific checks active: [list breaking changes for this version]
+```
 
-      Before your own analysis, run the stdlib-only static checker so
-      mechanically-detectable issues (raw SQL, `attrs=`, missing
-      `ensure_one()`, `browse()`/`search()` in loops, manual commit/rollback,
-      missing `ir.model.access.csv` rows, `super()` with args, `print()`) are
-      never missed just because a pass forgot to check for them by hand.
+Completion criterion: version confirmed, file list complete.
 
-      `checks/odoo_lint.py` lives next to this skill's `SKILL.md` — not
-      necessarily next to the user's project (skills installed with
-      `--global` live in a separate skills directory). Locate it relative to
-      wherever you read `SKILL.md` from, then run:
+---
 
-      ```
-      python3 <skill_root>/checks/odoo_lint.py <path-to-module-or-file> --odoo-version <X>
-      ```
+## Step 2 — Systematic review
 
-      Treat its findings as candidates, not verdicts — merge them into
-      <review_categories> below and confirm each one against the actual code
-      before including it in the report (the script does not understand
-      intent, e.g. a `search()` inside a loop that's genuinely needed).
+Work through every category in [Review categories](#review-categories).
+Check every item — do not skip a category because the file type seems
+unrelated. Mark each item OK or flag it.
 
-      This step requires an environment that can read files and run shell
-      commands, which any coding-focused assistant has. If you can't find
-      `odoo_lint.py`, or can't execute it, say so explicitly in the report
-      and fall back to a fully manual review — don't silently skip it.
-    </step>
+Completion criterion: every category checked, every flagged item has a
+file + line reference.
 
-    <step id="1" name="reasoning_block">
-      ## OUTPUT THIS ANALYSIS BEFORE THE REVIEW
+---
 
-      ```
-      REVIEW ANALYSIS:
-      - Odoo version detected: [X]
-      - Files to review: [list]
-      - Version-specific checks active: [list breaking changes for this version]
-      - Static pre-check findings: [N critical, N high, N medium — or "skipped: script not found/not executable"]
-      - Skills loaded: [list]
-      ```
-    </step>
+## Step 3 — Generate report
 
-    <step id="2" name="systematic_review">
-      ## SYSTEMATIC REVIEW — all categories below
+Output the report using [Output format](#output-format).
 
-      Review each component category in order, folding in confirmed findings
-      from the static pre-check where they match a category.
-      See <review_categories> for the full checklist per category.
-    </step>
+Completion criterion: every flagged item appears in the report with
+current code, required fix, and location.
 
-    <step id="3" name="generate_report">
-      ## GENERATE STRUCTURED REPORT
+---
 
-      See <output_format> for the exact report structure.
-    </step>
+## Review categories
 
-  </workflow>
+**Manifest**
+- Version format correct (`X.0.Y.Z.W`)
+- Dependencies complete
+- Data files listed in correct order: security → data → views → menus
+- Assets declared
+- License present
+- Category set
 
+**Models**
+- Correct inheritance (`_inherit` vs `_name`)
+- Correct decorators for detected version
+- Field naming conventions: `_id` suffix on Many2one, `_ids` on O2m/M2m
+- Computed fields optimized (`store=` where appropriate)
+- Constraints properly defined
+- CRUD overrides call `super()`
+- `action_*` methods call `self.ensure_one()` as first line
 
-  <!-- ============================================================
-       REVIEW CATEGORIES
-       ============================================================ -->
-  <review_categories>
+**Security**
+- `ir.model.access.csv` entry exists for every model
+- Record rules use `company_ids` — not `allowed_company_ids`
+- No SQL injection — no string concatenation in `cr.execute()`
+- No `sudo()` without a justification comment
+- No hardcoded database IDs — use `env.ref()`
 
-    <category id="manifest" title="Manifest Review">
-      <check>Version format correct (X.0.Y.Z.W)</check>
-      <check>Dependencies complete</check>
-      <check>Data files listed and in correct order (security → data → views → menus)</check>
-      <check>Assets declared</check>
-      <check>License appropriate</check>
-      <check>Category set</check>
-    </category>
+**Views**
+- `invisible=` / `readonly=` / `required=` used directly — `attrs=` must
+  never appear (removed in v17)
+- Always inherit with xpath — never replace views
+- Group restrictions applied where needed
+- XML IDs verified before referencing
 
-    <category id="models" title="Model Review">
-      <check>Proper inheritance (_inherit vs _name)</check>
-      <check>Correct decorators for detected version</check>
-      <check>Field definitions follow naming conventions (_id, _ids suffixes)</check>
-      <check>Computed fields optimized (store= where needed)</check>
-      <check>Constraints properly defined</check>
-      <check>CRUD methods call super()</check>
-      <check>action_ methods have ensure_one()</check>
-    </category>
+**Performance**
+- Search fields indexed where appropriate
+- No N+1 patterns — no `browse()` or `search()` inside loops
+- `mapped()` / `filtered()` used for batch operations
+- Prefetch used where beneficial
 
-    <category id="security" title="Security Review">
-      <check>Access rights defined for all models (ir.model.access.csv)</check>
-      <check>Record rules for multi-company</check>
-      <check>No SQL injection vulnerabilities</check>
-      <check>No sudo() without justification comment</check>
-      <check>Field-level security where needed</check>
-      <check>No hardcoded IDs — use xml_id with env.ref()</check>
-    </category>
+**OWL / JavaScript** (if applicable)
+- OWL 2.x for v17, v18, and v19 — confirmed in v19 source
+- `@odoo-module` comment present in v17 JS files, absent in v18/v19
+- Services used correctly
+- Registry registration present
+- Template structure valid
 
-    <category id="views" title="View Review">
-      <check>Uses invisible=/readonly=/required= directly — attrs= removed in v17, must never appear</check>
-      <check>Always inherit with xpath — never replace views</check>
-      <check>Group restrictions applied</check>
-      <check>XML IDs verified before referencing</check>
-    </category>
+**Tests**
+- Unit tests present
+- Security tests present
+- Edge cases covered
 
-    <category id="performance" title="Performance Review">
-      <check>Indexed search fields</check>
-      <check>Stored computed fields where appropriate</check>
-      <check>No N+1 query patterns (browse/search inside loops)</check>
-      <check>Efficient batch operations with mapped()/filtered()</check>
-      <check>Prefetch usage</check>
-    </category>
+---
 
-    <category id="javascript" title="OWL/JavaScript Review (if applicable)">
-      <check>Correct OWL version: v17-18 → OWL 2.x | v19 → OWL 3.x</check>
-      <check>Proper service usage</check>
-      <check>Registry registration</check>
-      <check>Template structure</check>
-    </category>
+## Version-specific checks
 
-    <category id="tests" title="Test Coverage">
-      <check>Unit tests present</check>
-      <check>Security tests</check>
-      <check>Edge cases covered</check>
-    </category>
+**v17**
+- `@odoo-module` required in all JS files
+- `attrs=` must not appear anywhere in views
+- `group_operator=` on fields (renamed to `aggregator=` in v18)
+- `_flush_search` deprecated (v17.1) — flushing via `Environment.execute_query()`
+- `inselect` operator removed (v17.4) — use `in` with a Query or SQL object
 
-    <category id="solid" title="SOLID Principles">
-      <check letter="S" name="Single Responsibility">A business method performs only one responsibility — validation, calculation and side effects are split into separate methods.</check>
-      <check letter="O" name="Open/Closed">Functionality is extended through inheritance (_inherit), never by modifying the original module.</check>
-      <check letter="L" name="Liskov Substitution">Overridden methods still satisfy the contract expected by the original field/method.</check>
-      <check letter="I" name="Interface Segregation">Mixins are designed so models inherit only the methods they actually need.</check>
-      <check letter="D" name="Dependency Inversion">Code depends on ORM services (self.env['model']) rather than concrete implementations or hardcoded IDs.</check>
-    </category>
+**v18**
+- `aggregator=` replaces `group_operator=` on field definitions
+- `<chatter reload_on_follower="True"/>` replaces `<div class="oe_chatter">`
+- `@odoo-module` no longer required in JS
+- `read_group()` deprecated (v18.2) → `_read_group()` / `formatted_read_group()`
+- `check_access()`, `has_access()`, `_filtered_access()` available
+- `_search_display_name` replaces `name_get()`
+- Record rules: `company_ids` — not `allowed_company_ids`
 
-  </review_categories>
+**v19**
+- `models.Constraint()` replaces `_sql_constraints`
+- `models.Index()` for index definitions
+- `from odoo.osv import expression` deprecated → `from odoo import expression`
+- `record._cr`, `record._context`, `record._uid` deprecated →
+  `self.env.cr`, `self.env.context`, `self.env.uid`
+- OWL 2.x still in use — no OWL migration required
 
+---
 
-  <!-- ============================================================
-       VERSION-SPECIFIC CHECKS
-       ============================================================ -->
-  <version_checks>
+## Output format
 
-    <version id="17">
-      <!-- Source: https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html#changelog -->
-      <check>@odoo-module comment required in JS files (v17) — not needed in v18/v19, use direct ES module imports</check>
-      <check>attrs= removed in views — use invisible=/readonly=/required= directly</check>
-      <check>Verify @api.model_create_multi usage on create() overrides</check>
-      <check>SQL() wrapper introduced for safer SQL composition — flag raw string concatenation in cr.execute()</check>
-      <check>Field.group_operator renamed to Field.aggregator (v17.2)</check>
-      <check>_flush_search deprecated (v17.1) — flushing now handled by Environment.execute_query()</check>
-      <check>inselect operator removed (v17.4) — use in with a Query or SQL object</check>
-    </version>
+```
+# Code Review: {module_name}
+## Version: {odoo_version}
 
-    <version id="18">
-      <!-- Source: https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html#changelog -->
-      <check>group_operator renamed to aggregator on field definitions (v18)</check>
-      <check>precompute=True available on computed/related fields</check>
-      <check>_rec_names_search available for multi-field name search</check>
-      <check>&lt;chatter&gt; widget replaces the full oe_chatter div block in v18+ — use &lt;chatter reload_on_follower="True"/&gt; instead of &lt;div class="oe_chatter"&gt; with message_follower_ids, activity_ids, message_ids fields</check>
-      <check>read_group() deprecated (v18.2) — use _read_group() for backend, formatted_read_group() as public API</check>
-      <check>@api.private introduced (v18.2) — flag public methods that should not be exposed to RPC</check>
-      <check>check_access(), has_access(), _filtered_access() — new methods combining access rights and rules (v18.0)</check>
-      <check>_search_display_name replaces name_get() (deprecated since v16.4)</check>
-      <check>odoo.Domain API available for domain manipulation (v18.1)</check>
-      <check>_check_company_auto = True on models with company_id</check>
-      <check>check_company=True on relational fields with company dependency</check>
-      <check>allowed_company_ids in record rules (not company_ids)</check>
-    </version>
+### Overall assessment
+- Security:           ★★★★☆
+- Code quality:       ★★★★★
+- Performance:        ★★★☆☆
+- Version compliance: ★★★★★
+- Test coverage:      ★★☆☆☆
 
-    <version id="19">
-      <!-- Source: https://www.odoo.com/documentation/19.0/developer/reference/backend/orm.html#changelog -->
-      <check>models.Constraint() replaces _sql_constraints list — confirmed in 19.0 source</check>
-      <check>models.Index() available for defining indexes as model attributes — confirmed in 19.0 source</check>
-      <check>from odoo.osv import expression deprecated — use from odoo import expression</check>
-      <!-- Covers Odoo 19.0 self-hosted only — Odoo Online sub-versions excluded -->
-      <check>odoo.osv deprecated — flag any import or usage</check>
-      <check>record._cr, record._context, record._uid deprecated — use self.env.cr, self.env.context, self.env.uid</check>
-      <check>GROUPING SETS now supported in pivot views — flag manual workarounds that replicate this</check>
-    </version>
+### Critical issues — fix immediately
+1. [SECURITY] models/model.py:45
+   Issue: SQL injection vulnerability
+   Current:  cr.execute(f"SELECT * FROM {table}")
+   Fix:      use ORM or parameterized query
 
-  </version_checks>
+### Warnings — should fix
+1. [PERFORMANCE] models/model.py:78
+   Issue: browse() inside loop — N+1 pattern
+   Fix:   use mapped() or prefetch
 
+### Suggestions — nice to have
+1. [QUALITY] models/model.py:100
+   Consider adding type hints (v18+)
 
-  <!-- ============================================================
-       OUTPUT FORMAT
-       ============================================================ -->
-  <output_format>
+### Positive observations
+- [what is done well]
 
-    ```markdown
-    # Code Review: {module_name}
-    ## Version: {odoo_version}
+### Files reviewed
+| File | Issues |
+|------|--------|
+| __manifest__.py | 0 |
+| models/model.py | 3 |
+| views/views.xml | 1 |
+| security/ir.model.access.csv | 0 |
+```
 
-    ### Overall Assessment
-    - **Security**: ⭐⭐⭐⭐☆ (4/5)
-    - **Code Quality**: ⭐⭐⭐⭐⭐ (5/5)
-    - **Performance**: ⭐⭐⭐☆☆ (3/5)
-    - **Version Compliance**: ⭐⭐⭐⭐⭐ (5/5)
-    - **Test Coverage**: ⭐⭐☆☆☆ (2/5)
+---
 
-    ### Critical Issues (Fix Immediately)
-    1. **[SECURITY]** `models/model.py:45`
-       - Issue: SQL injection vulnerability
-       - Current: `cr.execute(f"SELECT * FROM {table}")`
-       - Fix: Use ORM or SQL builder
+## SOLID principles — applied to Odoo
 
-    ### Warnings (Should Fix)
-    1. **[PERFORMANCE]** `models/model.py:78`
-       - Issue: N+1 query pattern (browse inside loop)
-       - Suggestion: Use prefetch or mapped()
+Review each principle as a judgment call, not a mechanical check.
+Flag violations with the specific method or class and a concrete suggestion.
 
-    ### Suggestions (Nice to Have)
-    1. **[QUALITY]** `models/model.py:100`
-       - Consider adding type hints (v18+)
+**S — Single Responsibility**
+Each business method does one thing. Flag any `action_*` or business method
+that mixes validation, computation, and side effects (sending email, creating
+related records) in the same body. Each concern belongs in a separate method.
 
-    ### Positive Observations
-    - Clean code organization
-    - Good use of version-appropriate patterns
+Incorrect:
+```python
+def action_confirm(self):
+    self.ensure_one()
+    if not self.partner_id:
+        raise UserError(_("Partner is required."))
+    self.amount_total = sum(self.line_ids.mapped('price_subtotal'))
+    self.state = 'confirmed'
+    self.message_post(body=_("Order confirmed."))
+    self.env['account.move'].create({...})
+```
 
-    ### Files Reviewed
-    | File | Issues |
-    |------|--------|
-    | `__manifest__.py` | 0 |
-    | `models/model.py` | 3 |
-    | `views/views.xml` | 1 |
-    | `security/ir.model.access.csv` | 0 |
-    ```
+Correct — each concern separated:
+```python
+def action_confirm(self):
+    self.ensure_one()
+    self._check_confirm_preconditions()
+    self._compute_totals()
+    self.write({'state': 'confirmed'})
+    self._notify_confirmation()
+    self._create_invoice()
+```
 
-  </output_format>
+**O — Open/Closed**
+Extend via `_inherit`, never modify the original module. Flag any code that
+patches or overwrites methods from another module without using inheritance.
+This is the OCA "don't touch core" rule.
 
-</agent>
+**L — Liskov Substitution**
+When overriding an inherited method (e.g. a `_compute_*` override), the
+result must still fulfill the contract expected by the field or any caller.
+Flag overrides that change the return type, skip the `super()` call without
+justification, or produce side effects that the original method did not have.
+
+**I — Interface Segregation**
+Mixins must be designed so a model inherits only the methods it actually
+needs. Flag mixins that force inheriting models to carry methods or fields
+they never use. A model that inherits `mail.thread` only to get one
+`message_post` call is acceptable; a custom mixin that bundles 10 unrelated
+methods is not.
+
+**D — Dependency Inversion**
+Depend on ORM methods (`self.env['model']`) rather than coupling to concrete
+implementations, hardcoded IDs, or logic replicated from another module.
+Flag any hardcoded `env.ref('module.xml_id')` used as a constant inside
+business logic — it should be a parameter or a config field. Flag any
+method that reimplements logic already available in a dependency module.
+
+---
+
+## UI and views
+
+**Smart buttons**
+Smart buttons (`oe_stat_button`) must use `widget="statinfo"` and display
+a count that has immediate informational value (e.g. "3 invoices", "2
+deliveries"). Flag smart buttons used only as navigation links with no
+count, or buttons built as generic `<button>` elements without the
+`statinfo` widget and the `oe_stat_button` class.
+
+Correct:
+```xml
+<button class="oe_stat_button" type="object"
+        name="action_view_invoices" icon="fa-pencil-square-o">
+    <field widget="statinfo" name="invoice_count" string="Invoices"/>
+</button>
+```
+
+**Button placement**
+- Primary flow actions (confirm, cancel, approve) → statusbar buttons or
+  form header as primary buttons.
+- Secondary or infrequent actions → Action menu (gear icon).
+
+Flag buttons placed outside these zones — extra buttons scattered across
+the form body break the expected Odoo navigation pattern.
+
+**No Odoo Studio for business logic**
+Flag any module that shows signs of Studio-generated fields or logic
+(`x_studio_` prefix on field names, Studio metadata in XML). Studio
+generates configuration outside version control, without code review or
+tests. Its use is permitted only for layout mockups on staging environments.
+
+---
+
+## Logging and error handling
+
+**Logger declaration**
+Flag any logger declared inside a method or class body instead of at module
+level:
+```python
+# Correct — module level
+import logging
+_logger = logging.getLogger(__name__)
+```
+
+**Empty except blocks**
+Flag immediately — no `except` with only `pass` or an empty body.
+Every caught exception must be logged or re-raised.
+
+**UserError message quality**
+Flag `UserError` or `ValidationError` messages that expose technical field
+names, model names, or stack traces. Messages must be written in business
+language, actionable by the user without technical knowledge.
+
+**search_read over N+1**
+Flag `search()` followed by per-record field access in a loop. Suggest
+`search_read()` with an explicit field list instead.

@@ -20,6 +20,5 @@ Use when: quality and security audits of existing code.
 
 ---
 
-**Expected behavior:** output grouped by severity (CRITICAL / HIGH / MEDIUM), citing the
-specific rule from `<forbidden>` in `SKILL.md`, with the file and line referenced —
+**Expected behavior:** output grouped by severity (CRITICAL / HIGH / MEDIUM), citing the specific rule from the reviewer's checklist (e.g. SOLID S, LG-03, SR-01), with the file and line referenced —
 not a generic "looks fine" or unstructured prose review.
