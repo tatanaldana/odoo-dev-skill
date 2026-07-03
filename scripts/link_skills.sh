@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # scripts/link-skills.sh
-# Links SKILL.md, agents/ and skills/ from this repo into ~/.claude/skills/odoo-dev-skill/
-# and ~/.agents/skills/odoo-dev-skill/ for local development.
-# Changes to the repo are reflected immediately without reinstalling.
+# Links SKILL.md, agents/, skills/, hooks/ and templates/ from this repo into
+# ~/.claude/skills/odoo-dev-skill/ and ~/.agents/skills/odoo-dev-skill/
+# for local development. Changes to the repo are reflected immediately without reinstalling.
 
 set -euo pipefail
 
@@ -44,6 +44,18 @@ for DEST in "${TARGETS[@]}"; do
   if [ -d "$REPO/skills" ]; then
     ln -sfn "$REPO/skills" "$DEST/skills"
     echo "linked skills/ -> $DEST/skills"
+  fi
+
+  # Link hooks/
+  if [ -d "$REPO/hooks" ]; then
+    ln -sfn "$REPO/hooks" "$DEST/hooks"
+    echo "linked hooks/ -> $DEST/hooks"
+  fi
+
+  # Link templates/
+  if [ -d "$REPO/templates" ]; then
+    ln -sfn "$REPO/templates" "$DEST/templates"
+    echo "linked templates/ -> $DEST/templates"
   fi
 
   echo "done: $DEST"

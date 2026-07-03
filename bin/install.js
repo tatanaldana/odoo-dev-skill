@@ -129,6 +129,20 @@ function installTo(destName, destPath, dryRun) {
     console.log(`${dryRun ? "would install" : "installed"} skills/ -> ${destName}`);
   }
 
+  // Copy hooks/ directory
+  const hooksSrc = path.join(repoRoot, "hooks");
+  if (fs.existsSync(hooksSrc)) {
+    copyItem(hooksSrc, path.join(skillDest, "hooks"), backupDir, dryRun);
+    console.log(`${dryRun ? "would install" : "installed"} hooks/ -> ${destName}`);
+  }
+
+  // Copy templates/ directory
+  const templatesSrc = path.join(repoRoot, "templates");
+  if (fs.existsSync(templatesSrc)) {
+    copyItem(templatesSrc, path.join(skillDest, "templates"), backupDir, dryRun);
+    console.log(`${dryRun ? "would install" : "installed"} templates/ -> ${destName}`);
+  }
+
   // Clean empty backup dir
   if (!dryRun && fs.existsSync(backupDir)) {
     const contents = fs.readdirSync(backupDir);
