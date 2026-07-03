@@ -92,37 +92,47 @@ y lo usa.
 
 ---
 
-## Configurar los hooks en el proyecto
+## Configurar los hooks — una vez por proyecto
 
-En `.claude/settings.json` del proyecto, con la **ruta absoluta** al directorio
-global del skill:
+Los hooks son el respaldo mecánico del ciclo de contexto. El agente los verifica
+al inicio de cada tarea y avisa si no están configurados, pero no los escribe —
+eso es responsabilidad del comando `init`.
 
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [{
-          "type": "command",
-          "command": "python3 /home/tu-usuario/.claude/skills/odoo-dev-skill/hooks/context_session_guard.py"
-        }]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [{
-          "type": "command",
-          "command": "python3 /home/tu-usuario/.claude/skills/odoo-dev-skill/hooks/odoo_edit_guard.py"
-        }]
-      }
-    ]
-  }
-}
+### Primera vez en cada proyecto Odoo
+
+Desde la raíz del proyecto, después de haber instalado el skill globalmente:
+
+```bash
+cd /mi-proyecto-odoo
+npx github:tatanaldana/odoo-dev-skill init
 ```
 
-En macOS reemplazar `/home/tu-usuario/` por `/Users/tu-usuario/`.
-Verificar la ruta con `ls ~/.claude/skills/odoo-dev-skill/hooks/` antes de usarla.
+Luego **reiniciar Claude Code**. A partir de ese arranque los hooks están activos.
+
+Lo que hace `init`:
+- Resuelve la ruta absoluta al skill instalado globalmente
+- Crea `.claude/settings.json` si no existe, o agrega los hooks si ya existe
+- No toca ninguna otra clave del archivo
+- Funciona en Linux, macOS y Windows
+
+```bash
+# Ver qué escribiría sin tocar nada
+npx github:tatanaldana/odoo-dev-skill init --dry-run
+```
+
+### Qué pasa en la primera sesión sin `init`
+
+El skill funciona normalmente — el agente sigue `SKILL.md` y archiva a
+`history_context.xml` por instrucción directa. Los hooks no están como
+respaldo en esa primera sesión, pero el flujo principal no depende de ellos.
+
+El agente avisa una sola vez por sesión si detecta que los hooks no están
+configurados, sin bloquear el trabajo.
+
+### Proyectos futuros
+
+Cada proyecto nuevo requiere correr `init` una vez desde su raíz antes de
+la primera sesión de Claude Code. El install global no se repite.
 
 ---
 
