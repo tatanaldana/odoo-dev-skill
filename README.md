@@ -1,6 +1,6 @@
 # Odoo Development Universal Skill
 
-A universal Odoo development skill for AI agents compatible with `skills.sh`. It provides fast code indexing, intelligent patterns, and strict adherence to Odoo Community Association (OCA) standards for versions **17, 18 and 19**.
+A universal Odoo development skill for AI agents compatible with Claude Code. It provides fast code indexing, intelligent patterns, and strict adherence to Odoo Community Association (OCA) standards for versions **17, 18 and 19**.
 
 This repository is a fork and adaptation of the Odoo plugin from [letzdoo/claude-marketplace](https://github.com/letzdoo/claude-marketplace), restructured to be 100% agnostic and compatible with any IDE that supports `skills.sh` (like Windsurf, Cursor, Cline, etc.).
 
@@ -20,45 +20,59 @@ This repository is a fork and adaptation of the Odoo plugin from [letzdoo/claude
 
 ## Installation
 
-The skill installs directly from GitHub — no npm publish needed. Requires the repository to be public.
-
-Install globally (available in all your projects):
+### End users — install via npx
 
 ```bash
-npx skills add tatanaldana/odoo-dev-skill --global
+npx github:tatanaldana/odoo-dev-skill
 ```
 
-Or install for a specific project only:
+This copies `SKILL.md`, `agents/`, and `skills/` into both `~/.claude/skills/odoo-dev-skill/` and `~/.agents/skills/odoo-dev-skill/`. No manual steps required.
+
+Options:
 
 ```bash
-npx skills add tatanaldana/odoo-dev-skill
+# Install to Claude only
+npx github:tatanaldana/odoo-dev-skill --target claude
+
+# Install to ~/.agents only
+npx github:tatanaldana/odoo-dev-skill --target agents
+
+# Preview what would be installed without touching anything
+npx github:tatanaldana/odoo-dev-skill --dry-run
 ```
 
-Once installed, the AI agent automatically reads `SKILL.md` when Odoo-related tasks are detected. You can verify the installation with:
+Once installed, Claude Code automatically reads `SKILL.md` when Odoo-related tasks are detected. Invoke the skill explicitly with:
+
+```
+/odoo-dev-skill
+```
+
+### Local development — clone and link
+
+If you want to edit the skill and see changes immediately without reinstalling:
 
 ```bash
-npx skills list
+git clone https://github.com/tatanaldana/odoo-dev-skill
+cd odoo-dev-skill
+chmod +x scripts/link-skills.sh
+./scripts/link-skills.sh
 ```
 
-### How it works
-
-`npx skills add owner/repo` fetches `SKILL.md` and all referenced files from the GitHub repository. The frontmatter in `SKILL.md` registers the skill:
-
-```yaml
-name: odoo-dev-skill       # identifier used by the skill manager
-versions: "17,18,19"       # metadata — which Odoo versions are covered
-```
-
-No `package.json` or additional config files are required.
+This creates symlinks from `~/.claude/skills/odoo-dev-skill/` and `~/.agents/skills/odoo-dev-skill/` to your local repo. Any edit to `agents/` or `skills/` is picked up by Claude Code immediately.
 
 ---
 
 ## Architecture
 
 ```text
-odoo-development-skill/
+odoo-dev-skill/
 ├── SKILL.md                              # Main entrypoint — plain markdown, executes immediately
 ├── README.md                             # This documentation
+├── package.json                          # npm installer declaration
+├── bin/
+│   └── install.js                        # npx installer — copies agents/ and skills/ on install
+├── scripts/
+│   └── link-skills.sh                    # local dev — symlinks repo into ~/.claude/skills/
 ├── agents/                               # 5 specialized workflow agents
 │   ├── odoo-context-gatherer.md          # model-invoked — gather context before complex code
 │   ├── odoo-code-reviewer.md             # user-invoked — quality and security audit
@@ -69,7 +83,7 @@ odoo-development-skill/
 ├── templates/                             # context_session.xml / history_context.xml starters
 ├── checks/                                # odoo_lint.py — stdlib-only static pre-check
 ├── hooks/                                 # optional Claude Code Stop hook (context discipline)
-└── skills/                               # 30 pattern files (families + dispatchers)
+└── skills/                               # 31 pattern files (families + dispatchers)
     ├── odoo-version-knowledge.md         # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
     ├── odoo-model-patterns.md            # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
     ├── odoo-module-generator.md          # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
@@ -220,20 +234,19 @@ HIGH/MEDIUM findings are left for the full review agents.
 
 ## Usage
 
-Once installed, your AI assistant automatically reads `SKILL.md` when
-Odoo-related tasks are requested. The assistant will:
+Once installed, Claude Code automatically reads `SKILL.md` when Odoo-related
+tasks are requested. The assistant will:
 
 1. **Detect** your Odoo version from `__manifest__.py`
 2. **Classify** the task as simple or complex
-3. **Simple tasks** — check forbidden rules, look up pattern, write code
-4. **Complex tasks** — invoke `odoo-context-gatherer` which loads relevant
+3. **Simple tasks** — check forbidden rules, Read the relevant pattern file, write code
+4. **Complex tasks** — Read `agents/odoo-context-gatherer.md` which loads relevant
    skill files and compiles version-specific patterns before any code is written
 5. **Validate** generated code against OCA and Odoo coding guidelines on request
 
 ### Running the agents
 
 ```
-# Context gathering (fires automatically on complex tasks)
 # Code review
 "Review this module for quality and security issues"
 
@@ -245,6 +258,9 @@ Odoo-related tasks are requested. The assistant will:
 
 # Pattern lookup
 "Find the pattern for a computed field with inverse"
+
+# FastAPI API development
+"Create a FastAPI endpoint to expose sale orders"
 ```
 
 ---
