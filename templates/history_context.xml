@@ -1,0 +1,29 @@
+<!--
+  history_context.xml — append-only log of finished sessions for
+  odoo-dev-skill.
+
+  Copy this into .claude/odoo-dev-skill/history_context.xml in the target
+  project. One <session> element is appended per completed
+  context_session.xml. Never rewrite or delete past entries — this file is
+  the audit trail of the assistant's work over time, and the intended raw
+  material for future fine-tuning or RAG datasets built on this skill.
+
+  See SKILL.md -> <context_management> for the full lifecycle.
+-->
+<history_context>
+
+  <!--
+  <session id="" started="" ended="" odoo_version="">
+    <summary></summary>
+    <module></module>
+    <patterns_used>
+      <pattern file=""/>
+    </patterns_used>
+    <files_changed>
+      <file path="" action=""/>
+    </files_changed>
+    <outcome status="completed"></outcome>
+  </session>
+  -->
+
+</history_context>

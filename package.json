@@ -1,0 +1,43 @@
+{
+  "name": "@tatanaldana/odoo-dev-skill",
+  "version": "1.0.0",
+  "description": "Odoo module development skill for Claude Code — versions 17, 18 and 19, OCA standards, specialized agents.",
+  "type": "commonjs",
+  "bin": {
+    "odoo-dev-skill": "./bin/install.js"
+  },
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "bin/",
+    "agents/",
+    "skills/"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "skills",
+    "odoo",
+    "oca",
+    "claude",
+    "code-review",
+    "migration",
+    "owl",
+    "fastapi"
+  ],
+  "homepage": "https://github.com/tatanaldana/odoo-dev-skill#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tatanaldana/odoo-dev-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tatanaldana/odoo-dev-skill/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

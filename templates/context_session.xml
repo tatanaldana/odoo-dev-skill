@@ -1,0 +1,38 @@
+<!--
+  context_session.xml — per-task working memory for odoo-dev-skill.
+
+  Copy this into .claude/odoo-dev-skill/context_session.xml in the target
+  project (create the folder if needed). Keep it under ~12,000 characters —
+  compress <decisions> and <files_touched> instead of letting it grow
+  unbounded. When the task finishes, append a <session> summary to
+  history_context.xml and reset this file.
+
+  See SKILL.md -> <context_management> for the full lifecycle.
+-->
+<context_session id="" started="" odoo_version="" max_chars="12000">
+
+  <task>
+    <description></description>
+    <module></module>
+    <models></models>
+  </task>
+
+  <state>
+    <patterns_loaded>
+      <!-- <pattern file="skills/odoo-model-patterns-18.md"/> -->
+    </patterns_loaded>
+
+    <files_touched>
+      <!-- <file path="models/library_book.py" action="created"/> -->
+    </files_touched>
+
+    <decisions>
+      <!-- <decision>Short, terse rationale for a choice made.</decision> -->
+    </decisions>
+
+    <open_questions>
+      <!-- <question>Unresolved thing to confirm with the user.</question> -->
+    </open_questions>
+  </state>
+
+</context_session>
