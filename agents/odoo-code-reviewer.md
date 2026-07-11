@@ -108,7 +108,7 @@ current code, required fix, and location.
 
 **v18**
 - `aggregator=` replaces `group_operator=` on field definitions
-- `<chatter reload_on_follower="True"/>` replaces `<div class="oe_chatter">`
+- Bare, self-closing `<chatter/>` replaces `<div class="oe_chatter">` (dominant form in real 18.0/19.0 source; optional reload_on_attachment/reload_on_follower/reload_on_post exist for specific views but are not required)
 - `@odoo-module` no longer required in JS
 - `read_group()` deprecated (v18.2) → `_read_group()` / `formatted_read_group()`
 - `check_access()`, `has_access()`, `_filtered_access()` available
@@ -118,7 +118,7 @@ current code, required fix, and location.
 **v19**
 - `models.Constraint()` replaces `_sql_constraints`
 - `models.Index()` for index definitions
-- `from odoo.osv import expression` deprecated → `from odoo import expression`
+- `odoo.osv.expression` superseded in modern addon code by `Domain` from `odoo.fields` (module still exists, style migration not a hard removal)
 - `record._cr`, `record._context`, `record._uid` deprecated →
   `self.env.cr`, `self.env.context`, `self.env.uid`
 - OWL 2.x still in use — no OWL migration required

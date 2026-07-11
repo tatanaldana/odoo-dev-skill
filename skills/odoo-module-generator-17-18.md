@@ -16,7 +16,7 @@ or when migrating an existing v17 module to v18.
   <version id="18">
     Breaking: `group_operator=` → `aggregator=` on fields.
     Breaking: `&lt;tree&gt;` → `&lt;list&gt;` tag in XML views.
-    Breaking: `oe_chatter` div → `&lt;chatter reload_on_attachment="True"/&gt;`.
+    Breaking: `oe_chatter` div → `&lt;chatter/&gt;` (bare, self-closing — dominant form in real 18.0/19.0 source).
     New: `export_string_translation=False` on fields.
     New: `web.assets_unit_tests` key in manifest.
     New: `@odoo-module` comment no longer required in JS.
@@ -86,7 +86,7 @@ Before (v17):
 
 After (v18):
 ```xml
-<chatter reload_on_attachment="True"/>
+<chatter/>
 ```
 
 Note: the attribute varies by model — `reload_on_attachment` for documents,
@@ -222,7 +222,7 @@ Models (Python):
 
 Views (XML):
 - Replace ALL `&lt;tree&gt;` tags with `&lt;list&gt;`
-- Replace `oe_chatter` div with `&lt;chatter reload_on_attachment="True"/&gt;`
+- Replace `oe_chatter` div with `&lt;chatter/&gt;` (bare, self-closing — dominant form in real 18.0/19.0 source)
 - Verify no `attrs=` remain (removed since v17)
 
 JavaScript (OWL):
@@ -261,7 +261,7 @@ JavaScript (OWL):
     <div class="oe_chatter">...</div>
 
     <!-- CORRECT in v18 -->
-    <chatter reload_on_attachment="True"/>
+    <chatter/>
     ```
   </antipattern>
 

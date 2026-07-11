@@ -123,7 +123,7 @@ current code, required fix, and migration steps.
 
 | Severity | Change |
 |----------|--------|
-| CRITICAL | `<div class="oe_chatter">` → `<chatter reload_on_follower="True"/>` — remove `message_follower_ids`, `activity_ids`, `message_ids` field declarations |
+| CRITICAL | `<div class="oe_chatter">` → `<chatter/>` (bare, self-closing) — remove `message_follower_ids`, `activity_ids`, `message_ids` field declarations. Optional attributes (`reload_on_follower`, `reload_on_attachment`, `reload_on_post`) exist for specific views but are not required — confirmed `<chatter/>` with no attributes is the dominant form in real 18.0/19.0 source (65+ occurrences) |
 | CRITICAL | `attrs=` removed — use `invisible=` / `readonly=` / `required=` directly |
 | HIGH | `group_operator=` → `aggregator=` on field definitions |
 | HIGH | `@odoo-module` no longer required in v18 JS files |
@@ -139,7 +139,7 @@ current code, required fix, and migration steps.
 |----------|--------|
 | CRITICAL | `_sql_constraints` → `models.Constraint()` — confirmed in v19 source |
 | HIGH | `models.Index()` for index definitions as model attributes |
-| HIGH | `from odoo.osv import expression` deprecated → `from odoo import expression` |
+| MEDIUM | `odoo.osv.expression` superseded in modern addon code by `Domain` from `odoo.fields` (`from odoo.fields import Command, Domain`) — confirmed zero uses of `from odoo.osv import expression` or `from odoo import expression` in real 19.0 addons/account/models; `odoo.osv.expression` module still exists, this is a style migration, not a hard removal |
 | HIGH | `record._cr`, `record._context`, `record._uid` deprecated → `self.env.cr`, `self.env.context`, `self.env.uid` |
 | INFO | OWL 2.x still in use in v19 — no OWL migration required for this hop |
 

@@ -15,15 +15,20 @@ and notification_service_17/18.js.
     Python: `message_post()` API identical across v17/v18/v19.
   </version>
   <version id="18">
-    Chatter view: `<chatter reload_on_attachment="True"/>` (document pattern) or
-    `<chatter reload_on_follower="True"/>` (task/follower pattern) — self-closing tag.
+    Chatter view: bare `<chatter/>` is the dominant form (65+ occurrences with no
+    attributes in real 18.0/19.0 source) — self-closing tag, no child fields. Optional
+    attributes exist for specific behaviors: `reload_on_attachment="True"` (document
+    pattern, e.g. account.move) or `reload_on_follower="True"` (task/follower pattern,
+    e.g. project.task) — add only if that behavior is actually needed.
     JS notification: `autocloseDelay` option added — controls ms before auto-close (0 = sticky).
     Confirmed via notification_service_18.js.
   </version>
   <version id="19">
     Chatter view syntax identical to v18.
     JS notification API identical to v18.
-    Python: `self.env._()` preferred over `from odoo import _` for translation in v19.
+    Python: both `from odoo import _` and `self.env._()` remain valid in v19 — confirmed
+    `from odoo import _` still used in 36 files of addons/account/models alone (e.g.
+    account_move.py). `self.env._()` is available but NOT a required replacement.
   </version>
 </version_notes>
 
@@ -84,9 +89,11 @@ class MyModel(models.Model):
     <sheet>
         <!-- ... fields ... -->
     </sheet>
-    <!-- For document models (account.move pattern): -->
-    <chatter reload_on_attachment="True"/>
-    <!-- For task/follower models (project.task pattern): -->
+    <!-- Default — bare tag, no attributes needed for most models -->
+    <chatter/>
+    <!-- For document models that need it (account.move pattern): -->
+    <!-- <chatter reload_on_attachment="True"/> -->
+    <!-- For task/follower models that need it (project.task pattern): -->
     <!-- <chatter reload_on_follower="True"/> -->
 </form>
 ```
@@ -244,8 +251,9 @@ Using `oe_chatter` div block in v18+ forms — replaced by the `<chatter/>` tag.
     <field name="message_ids"/>
 </div>
 
-<!-- CORRECT in v18+ -->
-<chatter reload_on_attachment="True"/>
+<!-- CORRECT in v18+ — bare tag, add reload_on_attachment/reload_on_follower
+     only if that specific behavior is actually needed -->
+<chatter/>
 ```
   </antipattern>
 

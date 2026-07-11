@@ -20,7 +20,7 @@
     <change type="feature">bypass_search_access=True on Many2one fields — confirmed in model_19.py lines 38, 99, 172</change>
     <change type="feature">SQL import path changed: from odoo.tools import SQL (not odoo.tools.sql) — confirmed in model_19.py line 10</change>
     <change type="feature">aggregator= on fields — same as v18, confirmed in model_19.py lines 72, 77</change>
-    <change type="feature">Chatter syntax same as v18: &lt;chatter reload_on_attachment="True"/&gt; — confirmed in views_19.xml line 1594</change>
+    <change type="feature">Chatter syntax same as v18: bare, self-closing &lt;chatter/&gt; — this is the dominant form (65+ occurrences with no attributes) in real 18.0/19.0 source; &lt;chatter reload_on_attachment="True"/&gt; also confirmed (views_19.xml line 1594) but only for the specific views that need that reload behavior</change>
     <change type="observed">Type hints: ORM-core convention, NOT enforced on addon code. Only 2 methods in the entire account.move.line source (3700+ lines) use return type annotations — do not treat as mandatory</change>
     <change type="observed">SQL(): recommended for complex queries, but raw parameterized cr.execute() coexists in real 19.0 addon code — not a hard requirement</change>
   </version>
@@ -318,7 +318,7 @@ class MyModel(models.Model):
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Form View — chatter: <chatter reload_on_attachment="True"/> confirmed in views_19.xml -->
+    <!-- Form View — chatter: bare <chatter/> is the dominant form; reload_on_attachment="True" also confirmed in views_19.xml but only where that reload behavior is needed -->
     <record id="view_my_model_form" model="ir.ui.view">
         <field name="name">my.model.form</field>
         <field name="model">my.model</field>
@@ -380,8 +380,8 @@ class MyModel(models.Model):
                         </page>
                     </notebook>
                 </sheet>
-                <!-- v19: same chatter syntax as v18 — confirmed in views_19.xml line 1594 -->
-                <chatter reload_on_attachment="True"/>
+                <!-- v19: same chatter syntax as v18 — bare tag is the dominant real-world form -->
+                <chatter/>
             </form>
         </field>
     </record>
@@ -505,8 +505,10 @@ from odoo.tools import SQL
     <field name="message_ids"/>
 </div>
 
-<!-- CORRECT in v19 (confirmed in views_19.xml line 1594) -->
-<chatter reload_on_attachment="True"/>
+<!-- CORRECT in v19 — bare tag is the dominant form (65+ occurrences with no
+     attributes in real 18.0/19.0 source); add reload_on_attachment="True" (also
+     confirmed in views_19.xml line 1594) only for views that need that behavior -->
+<chatter/>
 ```
   </antipattern>
 

@@ -64,7 +64,7 @@
       <change component="&lt;tree&gt; tag"    impact="BREAKING" note="Renamed to &lt;list&gt; in XML views"/>
       <change component="_check_company_auto" impact="NEW" note="Auto company validation on models with company_id"/>
       <change component="check_company"       impact="NEW" note="Field-level company validation on relational fields"/>
-      <change component="allowed_company_ids" impact="BREAKING" note="Replaces company_ids in record rules"/>
+      <change component="allowed_company_ids" impact="NOT-A-CHANGE" note="Does NOT replace company_ids in ir.rule domain_force — confirmed unchanged against real addons/account/security/account_security.xml in 18.0/19.0. allowed_company_ids is a separate context variable used in view-level field domain= attributes, not in record rules."/>
       <change component="read_group()"        impact="DEPRECATED" note="Use _read_group() / formatted_read_group()"/>
       <change component="@api.private"        impact="NEW" note="Marks methods not exposed to RPC (v18.2)"/>
       <change component="SQL() builder"       impact="RECOMMENDED" note="Safer SQL composition — not mandatory"/>
@@ -144,9 +144,9 @@
     | &lt;tree&gt; tag       | ✅  | ⚠️  | ❌  |
     | &lt;list&gt; tag       | ❌  | ✅  | ✅  |
     | @api.model_create_multi| ✅  | ✅  | ✅  |
-    | _check_company_auto    | ❌  | ✅  | ✅  |
-    | check_company on fields| ❌  | ✅  | ✅  |
-    | allowed_company_ids    | ❌  | ✅  | ✅  |
+    | _check_company_auto    | ✅  | ✅  | ✅  |
+    | check_company on fields| ✅  | ✅  | ✅  |
+    | allowed_company_ids (¹)| ❌  | ✅  | ✅  |
     | read_group()           | ✅  | ⚠️  | ⚠️  |
     | _read_group()          | ❌  | ✅  | ✅  |
     | @api.private           | ❌  | ✅  | ✅  |
@@ -158,6 +158,13 @@
     | Type hints             | ⚠️  | ⚠️  | ⚠️  |
 
     Legend: ✅ Supported | ⚠️ Recommended/Deprecated | ❌ Not available/Removed
+
+    (¹) `allowed_company_ids` exists as a context variable since v18, but it is used in
+    view-level field `domain=` attributes (client-side, evaluated against the user's
+    selected companies) — NOT in `ir.rule.domain_force`, which has always used
+    `company_ids` in v17, v18, and v19 alike (confirmed against real
+    addons/account/security/account_security.xml). Do not treat this row as license to
+    replace `company_ids` in record rules.
 
   </compatibility_matrix>
 

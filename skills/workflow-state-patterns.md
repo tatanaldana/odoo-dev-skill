@@ -20,7 +20,7 @@
     </version>
     <version id="18">
       &lt;tree&gt; replaced by &lt;list&gt; — breaking change.
-      Chatter: &lt;chatter reload_on_follower="True"/&gt; (confirmed project_task_views_18.xml line 587).
+      Chatter: &lt;chatter reload_on_follower="True"/&gt; (confirmed project_task_views_18.xml line 587 — this reload_on_follower attribute is specific to project.task's own kanban/follower-heavy workflow; most models just need the bare &lt;chatter/&gt; tag, which is the dominant form, 65+ occurrences with no attributes, across real 18.0/19.0 source).
       aggregator= replaces group_operator= on fields — breaking change.
       export_string_translation=False available on string fields.
     </version>

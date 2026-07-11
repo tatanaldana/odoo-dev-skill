@@ -46,13 +46,21 @@ const groups = await this.orm.formattedReadGroup(
     "sale.order",
     [["state", "=", "sale"]],           // domain
     ["partner_id"],                      // groupby
-    ["amount_total:sum", "id:count"],    // aggregates — "field:aggregate" syntax
+    ["amount_total:sum", "__count"],     // aggregates — "field:aggregate" syntax; count is the literal "__count"
     { orderBy: [{ name: "partner_id", asc: true }] }
 );
 // groups[i].partner_id              → [id, display_name]
 // groups[i]["amount_total:sum"]     → aggregate value
-// groups[i]["id:count"]             → count
+// groups[i]["__count"]              → count (confirmed in real 19.0 source,
+//                                      addons/website_links/static/src/interactions/website_links_charts.js
+//                                      — NOT "id:count", that spec does not exist)
 ```
+
+Note on groupby keys: the result is keyed by the FULL groupby spec string you passed,
+including any `:granularity` suffix — e.g. `groupby=["date:month"]` produces a key
+`groups[i]["date:month"]`, NOT `groups[i]["date"]`. The old `readGroup()` stripped the
+granularity down to the base field name; `formattedReadGroup()` does not (confirmed in
+addons/web/static/src/views/graph/graph_model.js of real 19.0 source).
 
   </example>
 
@@ -64,7 +72,7 @@ const result = await this.orm.formattedReadGroupingSets(
     "sale.order",
     [],
     [["partner_id"], ["state"], []],
-    ["amount_total:sum", "id:count"],
+    ["amount_total:sum", "__count"],
 );
 ```
 

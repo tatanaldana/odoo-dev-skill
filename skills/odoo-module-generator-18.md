@@ -12,7 +12,7 @@ Do not mix these patterns with other versions.
   <version id="18">
     Breaking from v17: `group_operator=` renamed to `aggregator=` on fields.
     Breaking from v17: `&lt;tree&gt;` tag renamed to `&lt;list&gt;` in XML views.
-    Breaking from v17: `&lt;div class="oe_chatter"&gt;` replaced by `&lt;chatter reload_on_attachment="True"/&gt;`.
+    Breaking from v17: `&lt;div class="oe_chatter"&gt;` replaced by `&lt;chatter/&gt;` (bare, self-closing — dominant form in real 18.0/19.0 source).
     New: `export_string_translation=False` on fields.
     New: `web.assets_unit_tests` key in manifest.
     New: `@odoo-module` comment no longer required in JS files.
@@ -325,7 +325,7 @@ class {ModelName}Line(models.Model):
                     </notebook>
                 </sheet>
                 <!-- v18: chatter tag replaces oe_chatter div -->
-                <chatter reload_on_attachment="True"/>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -589,7 +589,7 @@ class Test{ModelName}(TransactionCase):
     </div>
 
     <!-- CORRECT in v18 -->
-    <chatter reload_on_attachment="True"/>
+    <chatter/>
     ```
   </antipattern>
 

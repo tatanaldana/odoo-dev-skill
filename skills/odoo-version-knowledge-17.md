@@ -397,11 +397,11 @@
        PREPARING FOR v18
        ============================================================ -->
   <version_notes>
-    <change version="18" type="upcoming">oe_chatter div block replaced by chatter widget — use &lt;chatter reload_on_follower="True"/&gt;</change>
+    <change version="18" type="upcoming">oe_chatter div block replaced by the bare, self-closing &lt;chatter/&gt; tag (optional reload_on_attachment/reload_on_follower/reload_on_post attributes exist for specific views but are not required — confirmed the bare form is dominant in real 18.0/19.0 source)</change>
     <change version="18" type="upcoming">tree tag renamed to list in XML views — use odoo-bin upgrade_code --from 17.0 --to 18.0</change>
-    <change version="18" type="upcoming">_check_company_auto = True on models with company_id</change>
-    <change version="18" type="upcoming">check_company=True on relational fields with company dependency</change>
-    <change version="18" type="upcoming">allowed_company_ids replaces company_ids in record rules</change>
+    <change version="17" type="already-available">_check_company_auto = True on models with company_id — confirmed present in v17 source (account.move.line line 25), NOT a new v18 feature</change>
+    <change version="17" type="already-available">check_company=True on relational fields with company dependency — same as above, already available in v17</change>
+    <change version="18" type="not-a-change">Record rules keep using company_ids in domain_force — allowed_company_ids does NOT replace it (confirmed against addons/account/security/account_security.xml in real 18.0/19.0 source; a previous version of this file incorrectly claimed this change)</change>
     <change version="18" type="upcoming">@odoo-module no longer required in JS — direct ES module imports</change>
   </version_notes>
 

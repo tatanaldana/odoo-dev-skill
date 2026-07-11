@@ -74,7 +74,7 @@ export class MyDashboard extends Component {
                 "my.model",
                 [],
                 ["state"],
-                ["amount:sum", "id:count"],
+                ["amount:sum", "__count"],
             );
         } catch (err) {
             this.state.error = err.message;
@@ -116,11 +116,11 @@ const groups = await this.orm.formattedReadGroup(
     "sale.order",
     [["state", "=", "sale"]],      // domain
     ["partner_id"],                 // groupby
-    ["amount_total:sum", "id:count"],  // aggregates — "field:aggregate" syntax
+    ["amount_total:sum", "__count"],  // aggregates — "field:aggregate" syntax
 );
 // groups[i].partner_id        → group value
 // groups[i]["amount_total:sum"] → aggregate value
-// groups[i]["id:count"]         → count
+// groups[i]["__count"]         → count
 ```
 
   </example>

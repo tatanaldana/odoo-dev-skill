@@ -107,7 +107,7 @@ Completion criterion: output delivered, code generation can begin.
 **v17 → v18**
 - `group_operator=` → `aggregator=` on fields
 - `<tree>` → `<list>` in views
-- `<div class="oe_chatter">` → `<chatter reload_on_follower="True"/>` tag
+- `<div class="oe_chatter">` → bare, self-closing `<chatter/>` tag (dominant form in real 18.0/19.0 source; optional reload_on_attachment/reload_on_follower/reload_on_post exist for specific views but are not required)
 - `@odoo-module` no longer required in JS
 - ORM constructor refactored (no args in v18)
 - `read_group()` deprecated (v18.2) → use `_read_group()` / `formatted_read_group()`
@@ -120,7 +120,7 @@ Completion criterion: output delivered, code generation can begin.
 - `_sql_constraints` → `models.Constraint()`
 - Manual index definitions → `models.Index()`
 - SQL import: `odoo.tools.sql` → `odoo.tools`
-- `from odoo.osv import expression` deprecated → `from odoo import expression`
+- `odoo.osv.expression` superseded in modern addon code by `Domain` from `odoo.fields` (`from odoo.fields import Command, Domain`) — module still exists, this is a style migration not a hard removal
 - `record._cr`, `record._context`, `record._uid` deprecated →
   use `self.env.cr`, `self.env.context`, `self.env.uid`
 - OWL 2.x still in use — confirmed in v19 source. OWL 3.x expected in v20.

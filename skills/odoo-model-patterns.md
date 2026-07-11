@@ -23,8 +23,8 @@
   <version id="18">
     <change type="breaking">group_operator= renamed to aggregator= on fields — confirmed model_17.py vs model_18.py</change>
     <change type="breaking">&lt;tree&gt; tag renamed to &lt;list&gt; in XML views — confirmed views_18.xml</change>
-    <change type="breaking">&lt;div class="oe_chatter"&gt; replaced by &lt;chatter reload_on_attachment="True"/&gt; — confirmed views_18.xml line 1507</change>
-    <change type="breaking">allowed_company_ids replaces company_ids in record rule domain_force</change>
+    <change type="breaking">&lt;div class="oe_chatter"&gt; replaced by the bare, self-closing &lt;chatter/&gt; tag — confirmed dominant form (65+ occurrences with no attributes) in real 18.0/19.0 source; optional attributes like reload_on_attachment exist for specific views (e.g. views_18.xml line 1507) but are not required</change>
+    <change type="not-a-change">Record rules keep using company_ids in domain_force — allowed_company_ids does NOT replace it (confirmed against real addons/account/security/account_security.xml, 18.0/19.0)</change>
     <change type="feature">export_string_translation=False on fields — confirmed project_task_18.py</change>
     <change type="feature">SQL() import: from odoo.tools.sql import SQL — confirmed model_18.py line 11</change>
     <change type="feature">OWL 2.x — same as v17, confirmed component_18.js</change>

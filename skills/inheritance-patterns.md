@@ -20,7 +20,9 @@
     </version>
     <version id="18">
       &lt;tree&gt; replaced by &lt;list&gt; — breaking change.
-      Chatter: &lt;chatter reload_on_follower="True"/&gt; or &lt;chatter reload_on_attachment="True"/&gt;.
+      Chatter: bare &lt;chatter/&gt; is the dominant form (65+ occurrences with no attributes
+      in real 18.0/19.0 source); &lt;chatter reload_on_follower="True"/&gt; or
+      &lt;chatter reload_on_attachment="True"/&gt; exist for specific views only.
       aggregator= replaces group_operator= — breaking change.
       export_string_translation=False available on string fields.
       _check_company_auto and check_company= unchanged from v17.
@@ -241,9 +243,10 @@
               </field>
 
               <!-- v18/v19: chatter tag replaces oe_chatter div
-                   Use this when adding chatter to a model that did not have it -->
+                   Use this when adding chatter to a model that did not have it —
+                   bare tag by default, add reload_on_follower only if needed -->
               <xpath expr="//form" position="inside">
-                  <chatter reload_on_follower="True"/>
+                  <chatter/>
               </xpath>
           </field>
       </record>

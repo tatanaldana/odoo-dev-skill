@@ -140,7 +140,7 @@ If version is not stated, look for these indicators:
 Example 1 — Basic module (v18):
 1. Identify version: 18.0
 2. Load: odoo-module-generator-18.md
-3. Generate with v18 patterns: `aggregator=`, `<list>`, `<chatter reload_on_attachment="True"/>`, `company_ids` in record rules
+3. Generate with v18 patterns: `aggregator=`, `<list>`, `<chatter/>` (bare, self-closing), `company_ids` in record rules
 
 Example 2 — Sales extension (v17):
 1. Identify version: 17.0

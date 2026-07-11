@@ -20,7 +20,14 @@ Patterns for translating Python strings, field content, XML views, QWeb reports,
     `export_string_translation` attribute present (confirmed translate_18.py).
   </version>
   <version id="19">
-    `from odoo import _` removed — use `self.env._()` inside methods (decision #24).
+    IMPORTANT — corrected: a previous version of this file claimed `from odoo import _`
+    was "removed" in v19. This is FALSE. Verified against real 19.0 source:
+    `from odoo import _` is still used in 36 files of addons/account/models alone
+    (including account_move.py, a core actively-maintained file). Both `from odoo
+    import _` and `self.env._()` remain valid in v19 — `self.env._()` is available as
+    an alternative (useful when you don't want a module-level import, or want the
+    translation bound to the current env's language explicitly) but is NOT a required
+    replacement.
     `LazyTranslate` still imported from `odoo.tools.translate` for module-level constants
     (confirmed translate_19.py). `_lt` still works as alias. `_activate_lang()` and
     `_activate_and_install_lang()` identical to v18 (confirmed res_lang_19.py).
@@ -56,7 +63,7 @@ class MyModel(models.Model):
 ```
   </example>
 
-  <example id="env_translation_v19" title="Translation via self.env._() (v19)">
+  <example id="env_translation_v19" title="Translation via self.env._() — an alternative, not a requirement (v18/v19)">
 ```python
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -71,7 +78,8 @@ class MyModel(models.Model):
     def action_confirm(self):
         for record in self:
             if not record.name:
-                # v19: use self.env._() instead of imported _()
+                # self.env._() is available since v18 as an alternative to the
+                # imported _() — both remain valid in v19, this is a style choice
                 raise UserError(self.env._("Name is required to confirm."))
             record.state = 'confirmed'
             record.message_post(body=self.env._("Document confirmed."))
@@ -303,11 +311,9 @@ class MyModel(models.Model):
         ('3', 'Urgent'),
     ], string='Priority', default='1')
 
-    # Dynamic selection: wrap labels with _() or self.env._()
+    # Dynamic selection: wrap labels with _() or self.env._() — both work in v17/v18/v19
     @api.model
     def _get_type_selection(self):
-        # v17/v18: from odoo import _ at module level
-        # v19: use self.env._() here
         return [
             ('type_a', self.env._('Type A')),
             ('type_b', self.env._('Type B')),
@@ -338,11 +344,18 @@ class TestTranslation(common.TransactionCase):
 <antipatterns>
 
   <antipattern severity="CRITICAL">
-```python
-# WRONG v19: importing _ from odoo no longer works
-from odoo import _  # raises ImportError or returns None in v19
+    Claiming `from odoo import _` is removed/broken in v19 — FALSE. A previous version
+    of this file made this claim; it does not match real 19.0 source, where `from odoo
+    import _` is still used in 36 files of addons/account/models alone (e.g.
+    account_move.py). Both remain valid; do not "fix" working code that imports `_`
+    this way, and do not flag it as an error in review.
 
-# CORRECT v19: use self.env._()
+```python
+# VALID in v19 — this is NOT an error
+from odoo import _
+raise UserError(_("Cannot delete confirmed record."))
+
+# ALSO VALID in v19 — an alternative, not a required replacement
 raise UserError(self.env._("Cannot delete confirmed record."))
 ```
   </antipattern>

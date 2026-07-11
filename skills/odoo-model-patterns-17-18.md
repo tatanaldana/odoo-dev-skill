@@ -6,13 +6,16 @@
   Migration guide for model patterns from Odoo 17.0 to 18.0. The three breaking changes are:
   `group_operator=` renamed to `aggregator=` on field definitions; `&lt;tree&gt;` tag renamed
   to `&lt;list&gt;` in XML views; and chatter replaced from `&lt;div class="oe_chatter"&gt;`
-  to `&lt;chatter reload_on_attachment="True"/&gt;`.
+  to the self-closing `&lt;chatter/&gt;` tag (optional attributes like
+  `reload_on_attachment`/`reload_on_follower`/`reload_on_post` exist for specific views but
+  are not required — most 18.0/19.0 views just use bare `&lt;chatter/&gt;`).
 
   Note: `_check_company_auto` and `check_company=True` are NOT new in v18 — they are confirmed
-  present in v17 source (account.move.line line 25). The canonical change in v18 is
-  `allowed_company_ids` replacing `company_ids` in record rule domain_force expressions.
+  present in v17 source (account.move.line line 25). Record rules keep using `company_ids` in
+  `domain_force` in v18 — this is unchanged from v17 (see corrected note below).
 
-  Verified against real Odoo 17.0 and 18.0 source: account.move.line and account.move views.
+  Verified against real Odoo 17.0 and 18.0 source: account.move.line, account.move views, and
+  addons/account/security/account_security.xml (real ir.rule domain_force examples), addons/sale/views/sale_order_views.xml (real chatter tag usage).
 </description>
 
 <version_notes>
@@ -26,8 +29,8 @@
   <version id="18">
     <change type="breaking">group_operator= renamed to aggregator= on field definitions — confirmed in model_18.py lines 73, 78, 253, 409</change>
     <change type="breaking">&lt;tree&gt; tag renamed to &lt;list&gt; in XML views — confirmed in views_18.xml</change>
-    <change type="breaking">Chatter: &lt;div class="oe_chatter"&gt; replaced by &lt;chatter reload_on_attachment="True"/&gt; — confirmed in views_18.xml line 1507</change>
-    <change type="breaking">allowed_company_ids replaces company_ids in record rule domain_force expressions</change>
+    <change type="breaking">Chatter: &lt;div class="oe_chatter"&gt; replaced by self-closing &lt;chatter/&gt; — confirmed as the dominant form (65 occurrences with no attributes) in addons/sale/views/sale_order_views.xml line 921 of real 18.0/19.0 source; optional attributes (reload_on_attachment, reload_on_follower, reload_on_post, open_attachments, groups, position) exist in specific views (account_move_views.xml, hr_employee_views.xml, etc.) but are not required</change>
+    <change type="not-a-change">Record rules: domain_force still uses company_ids in v18 — NOT replaced by allowed_company_ids. Confirmed unchanged against addons/account/security/account_security.xml in both 18.0 and 19.0 branches. `allowed_company_ids` is a real Odoo context variable, but it is used in view-level field domain= attributes (client-side eval context), never in ir.rule domain_force. A prior version of this file incorrectly claimed this was a breaking change — corrected here.</change>
     <change type="feature">SQL() import path: from odoo.tools.sql import SQL — confirmed in model_18.py line 11</change>
     <change type="recommended">Type hints on method signatures — recommended convention, not mandatory</change>
   </version>
@@ -95,6 +98,12 @@ amount_currency = fields.Monetary(
 </field>
 ```
 
+Note: only the XML arch root/nested tag is renamed. Existing `ir.ui.view` record `id`s
+(e.g. `id="sale_order_tree"`) are NOT renamed in real Odoo source — renaming an established
+external ID would break every module that inherits it via `inherit_id`. Only the human-readable
+`name` field (e.g. `"sale.order.tree"` → `"sale.order.list"`) and `view_mode` field values
+(`tree,form` → `list,form`) are updated.
+
   </example>
 
   <example id="breaking_chatter" title="BREAKING: chatter syntax changed">
@@ -107,13 +116,25 @@ amount_currency = fields.Monetary(
     <field name="message_ids" options="{'post_refresh': 'always'}"/>
 </div>
 
-<!-- v18 — confirmed in views_18.xml line 1507 -->
+<!-- v18 — bare self-closing tag, confirmed as the dominant form in real source
+     (addons/sale/views/sale_order_views.xml line 921, and 65 other occurrences
+     across 18.0/19.0 addons with no attributes at all) -->
+<chatter/>
+
+<!-- v18 — optional attributes exist for specific behaviors, used only where needed
+     (confirmed in addons/account/views/account_move_views.xml line 1507,
+     addons/hr/views/hr_employee_views.xml, addons/crm/views/crm_lead_views.xml) -->
 <chatter reload_on_attachment="True"/>
+<chatter reload_on_follower="True"/>
+<chatter reload_on_post="True"/>
 ```
+
+Default to the bare `<chatter/>` tag unless a specific reload behavior is actually needed —
+do not add `reload_on_attachment="True"` by default, it is not part of the baseline migration.
 
   </example>
 
-  <example id="breaking_record_rules" title="BREAKING: allowed_company_ids in record rules">
+  <example id="record_rules_no_change" title="Record rules — company_ids unchanged in v18 (corrected)">
 
 ```xml
 <!-- v17 record rule -->
@@ -121,11 +142,19 @@ amount_currency = fields.Monetary(
     ('company_id', 'in', company_ids)
 ]</field>
 
-<!-- v18 — company_ids replaced by allowed_company_ids -->
+<!-- v18 — NO CHANGE. company_ids remains correct.
+     Confirmed against addons/account/security/account_security.xml in the real 18.0 branch:
+     <field name="domain_force">[('company_id', 'in', company_ids)]</field> appears unchanged. -->
 <field name="domain_force">[
-    ('company_id', 'in', allowed_company_ids)
+    ('company_id', 'in', company_ids)
 ]</field>
 ```
+
+`allowed_company_ids` is a real v18+ context variable, but it belongs to view-level field
+`domain=` attributes (e.g. `domain="[('company_id', 'in', allowed_company_ids)]"` on a
+Many2one field in a form view), which is evaluated client-side against the user's currently
+allowed companies — a different context from `ir.rule.domain_force`, which is evaluated
+server-side per-request and has always used `company_ids`.
 
   </example>
 
@@ -192,9 +221,15 @@ class MyModel(models.Model):
 ```
 BREAKING CHANGES — must fix:
 [ ] Rename group_operator= to aggregator= on all field definitions
-[ ] Rename <tree> to <list> in all XML view files (top-level views and inside One2many)
-[ ] Replace <div class="oe_chatter"> block with <chatter reload_on_attachment="True"/>
-[ ] Update record rules: replace company_ids with allowed_company_ids in domain_force
+[ ] Rename <tree> to <list> in all XML view files (top-level views and inside One2many),
+    including view_mode field values (tree,form -> list,form). Do NOT rename existing
+    ir.ui.view record ids.
+[ ] Replace <div class="oe_chatter"> block with <chatter/> (bare, unless a specific
+    reload_on_attachment/reload_on_follower/reload_on_post behavior is actually needed)
+
+NO CHANGE NEEDED (contrary to a previous version of this guide):
+[ ] Record rules: company_ids in domain_force is still correct in v18 — do NOT replace
+    with allowed_company_ids
 
 RECOMMENDED — not breaking but good practice:
 [ ] Adopt SQL() builder for new raw SQL methods (from odoo.tools.sql import SQL)
@@ -244,19 +279,21 @@ date = fields.Date(aggregator='min')
 </div>
 
 <!-- CORRECT in v18 -->
-<chatter reload_on_attachment="True"/>
+<chatter/>
 ```
   </antipattern>
 
-  <antipattern severity="HIGH">
-    Using `company_ids` in record rule `domain_force` in v18 — replaced by `allowed_company_ids`.
+  <antipattern severity="CRITICAL">
+    Claiming `allowed_company_ids` replaces `company_ids` in record rule `domain_force` in
+    v18 — this is FALSE. A previous version of this file made this claim; it does not match
+    real Odoo source (addons/account/security/account_security.xml, 18.0 and 19.0 branches).
 
 ```xml
-<!-- WRONG in v18 -->
-<field name="domain_force">[('company_id', 'in', company_ids)]</field>
-
-<!-- CORRECT in v18 -->
+<!-- WRONG — allowed_company_ids is not valid in ir.rule domain_force, in any version -->
 <field name="domain_force">[('company_id', 'in', allowed_company_ids)]</field>
+
+<!-- CORRECT in both v17 and v18 -->
+<field name="domain_force">[('company_id', 'in', company_ids)]</field>
 ```
   </antipattern>
 

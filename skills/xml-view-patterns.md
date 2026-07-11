@@ -14,8 +14,10 @@ chatter integration version differences, and actions/menus.
   </version>
   <version id="18">
     - List view tag renamed to `<list>` — `<tree>` no longer valid
-    - Chatter: `<chatter reload_on_attachment="True"/>` self-closing tag (account.move pattern)
-    - Chatter: `<chatter reload_on_follower="True"/>` for project.task pattern
+    - Chatter: bare, self-closing `<chatter/>` is the dominant form (65+ occurrences with
+      no attributes in real 18.0/19.0 source). Optional attributes exist for specific
+      views: `reload_on_attachment="True"` (account.move pattern), `reload_on_follower="True"`
+      (project.task pattern) — add only if that behavior is actually needed
     - Visibility syntax unchanged from v17
   </version>
   <version id="19">
@@ -167,7 +169,7 @@ chatter integration version differences, and actions/menus.
                     </page>
                 </notebook>
             </sheet>
-            <chatter reload_on_attachment="True"/>
+            <chatter/>
         </form>
     </field>
 </record>
@@ -439,10 +441,11 @@ Using `oe_chatter` div block in v18+ — replaced by the `<chatter/>` tag.
     <field name="message_ids"/>
 </div>
 
-<!-- CORRECT in v18+ -->
-<chatter reload_on_attachment="True"/>
-<!-- or for follower-triggered reload (project.task pattern) -->
-<chatter reload_on_follower="True"/>
+<!-- CORRECT in v18+ — bare tag, no attributes needed for most models -->
+<chatter/>
+<!-- optional attributes for specific views that need them -->
+<!-- <chatter reload_on_attachment="True"/> (account.move pattern) -->
+<!-- <chatter reload_on_follower="True"/> (project.task pattern) -->
 ```
   </antipattern>
 

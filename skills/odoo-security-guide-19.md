@@ -4,17 +4,34 @@
 
   <description>
     Odoo 19.0 security patterns. Covers access rights, record rules, model-level
-    security, field-level security, view security, SQL builder, mandatory type hints,
+    security, field-level security, view security, SQL builder, type hints,
     models.Constraint(), and models.Index(). Use this file for v19 only.
+
+    IMPORTANT: a previous version of this file claimed type hints and the SQL()
+    builder are "mandatory" in v19, and showed models.Constraint()/models.Index()
+    wrapped in _sql_constraints=[...] / _indexes=[...] lists. Both claims are FALSE —
+    verified against real 19.0 source (account.move.line, 3700+ lines, has only 2
+    type-hinted methods; account_journal.py/account_move_line.py use bare
+    `_name = models.Constraint(...)` / `_name = models.Index(...)` class attributes,
+    never a wrapping list). Corrected below — cross-reference odoo-model-patterns-18-19.md
+    and odoo-model-patterns-19.md, which document this correctly with the same citations.
   </description>
 
   <version_notes>
     <version id="19">
-      Type hints mandatory on all fields — use from __future__ import annotations.
-      SQL() builder mandatory — from odoo.tools import SQL (import path changed from v18).
-      models.Constraint() replaces _sql_constraints tuple list.
-      models.Index() replaces index=True / index='btree' / index='trigram' on fields.
+      Type hints: recommended convention, NOT mandatory — confirmed 0 type hints across
+      account.move.line's 3700+ lines in real source. Use from __future__ import
+      annotations only where you choose to adopt them.
+      SQL() builder: recommended, NOT mandatory — from odoo.tools import SQL (import
+      path changed from v18). Raw parameterized cr.execute() remains valid and coexists
+      with SQL() throughout real 19.0 addon code.
+      models.Constraint() replaces _sql_constraints — as a BARE class attribute
+      (`_my_constraint = models.Constraint(sql, message)`), never a list.
+      models.Index() replaces index=True / index='btree' / index='trigram' on fields —
+      also a bare class attribute (`_my_idx = models.Index("(col1, col2)")`), never a list.
       Record rules use company_ids in domain_force — same variable as v17/v18.
+      allowed_company_ids is NOT valid in domain_force in any version (confirmed against
+      real account_security.xml).
       _check_company_auto = True available — same as v17/v18.
       attrs= still removed — use invisible= directly.
     </version>
@@ -70,9 +87,8 @@
       ```
     </example>
 
-    <example id="model_security" title="Model with mandatory type hints and Constraint/Index (v19)">
+    <example id="model_security" title="Model with Constraint/Index (v19) — type hints optional">
       ```python
-      from __future__ import annotations
       from odoo import api, fields, models, _
       from odoo.exceptions import AccessError
       from odoo.tools import SQL
@@ -83,45 +99,40 @@
           _inherit = ['mail.thread', 'mail.activity.mixin']
           _check_company_auto = True
 
-          # v19: type hints mandatory on all fields
-          name: str = fields.Char(string='Name', required=True, tracking=True)
-          active: bool = fields.Boolean(default=True)
-          company_id: int = fields.Many2one(
+          # Type hints are optional in v19 — adopt them where they help readability,
+          # not because the ORM or test suite require them.
+          name = fields.Char(string='Name', required=True, tracking=True)
+          active = fields.Boolean(default=True)
+          company_id = fields.Many2one(
               comodel_name='res.company',
               string='Company',
               default=lambda self: self.env.company,
               required=True,
           )
-          partner_id: int = fields.Many2one(
+          partner_id = fields.Many2one(
               comodel_name='res.partner',
               string='Partner',
               check_company=True,
           )
-          state: str = fields.Selection([
+          state = fields.Selection([
               ('draft', 'Draft'),
               ('confirmed', 'Confirmed'),
               ('done', 'Done'),
           ], default='draft', tracking=True)
 
-          # v19: models.Constraint() replaces _sql_constraints
-          _sql_constraints = [
-              models.Constraint(
-                  'unique_name_company',
-                  'UNIQUE(name, company_id)',
-                  'Name must be unique per company.',
-              ),
-          ]
+          # v19: models.Constraint() replaces _sql_constraints — a BARE class
+          # attribute, never wrapped in a list (confirmed account_journal.py lines 36-39)
+          _unique_name_company = models.Constraint(
+              'UNIQUE(name, company_id)',
+              'Name must be unique per company.',
+          )
 
-          # v19: models.Index() replaces index= on fields
-          _indexes = [
-              models.Index(
-                  'idx_custom_secure_company_state',
-                  ['company_id', 'state'],
-              ),
-          ]
+          # v19: models.Index() replaces index= on fields — also a bare attribute,
+          # a single column-list string (confirmed account_move_line.py lines 480-489)
+          _company_state_idx = models.Index("(company_id, state)")
 
           @api.model_create_multi
-          def create(self, vals_list: list[dict]) -> SecureModel:
+          def create(self, vals_list):
               return super().create(vals_list)
 
           def action_sensitive_operation(self) -> None:
@@ -179,17 +190,35 @@
     </antipattern>
 
     <antipattern severity="CRITICAL">
+      Claiming type hints are mandatory in v19 and flagging their absence as an error —
+      FALSE. Real 19.0 source (account.move.line, 3700+ lines) has only 2 type-hinted
+      methods. A previous version of this file made this claim; it has been removed.
+
       ```python
-      # WRONG: missing type hints in v19 (mandatory)
+      # NOT an error in v19 — type hints are optional
       class MyModel(models.Model):
           name = fields.Char(required=True)
           partner_id = fields.Many2one('res.partner')
+      ```
+    </antipattern>
 
-      # CORRECT
-      from __future__ import annotations
-      class MyModel(models.Model):
-          name: str = fields.Char(required=True)
-          partner_id: int = fields.Many2one('res.partner')
+    <antipattern severity="HIGH">
+      Wrapping `models.Constraint()` or `models.Index()` in a `_sql_constraints = [...]` /
+      `_indexes = [...]` list in v19 — this pattern does not exist in real 19.0 source.
+      They are bare class attributes.
+
+      ```python
+      # WRONG in v19 — no such list-wrapped pattern exists in real source
+      _sql_constraints = [
+          models.Constraint('unique(name)', 'Name must be unique!'),
+      ]
+      _indexes = [
+          models.Index('idx_name', ['name']),
+      ]
+
+      # CORRECT in v19 (confirmed in account_journal.py, account_move_line.py)
+      _name_uniq = models.Constraint('unique(name)', 'Name must be unique!')
+      _name_idx = models.Index("(name)")
       ```
     </antipattern>
 

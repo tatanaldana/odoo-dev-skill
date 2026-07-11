@@ -189,8 +189,10 @@
                               </page>
                           </notebook>
                       </sheet>
-                      <!-- v18/v19: chatter widget -->
-                      <chatter reload_on_attachment="True"/>
+                      <!-- v18/v19: chatter widget — bare tag is the dominant real-world
+                           form (65+ occurrences with no attributes); add reload_on_* only
+                           if that specific behavior is needed -->
+                      <chatter/>
                   </form>
               </field>
           </record>

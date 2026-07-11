@@ -16,11 +16,11 @@
   <version_notes>
     <!-- Source: ORM changelog + confirmed in codebase -->
     <change version="18" type="breaking">&lt;tree&gt; tag renamed to &lt;list&gt; in XML views — use odoo-bin upgrade_code --from 17.0 --to 18.0 for automatic conversion</change>
-    <change version="18" type="breaking">&lt;div class="oe_chatter"&gt; block replaced by &lt;chatter reload_on_follower="True"/&gt; widget</change>
-    <change version="18" type="breaking">company_ids replaced by allowed_company_ids in record rules</change>
+    <change version="18" type="breaking">&lt;div class="oe_chatter"&gt; block replaced by the bare, self-closing &lt;chatter/&gt; tag (optional reload_on_attachment/reload_on_follower/reload_on_post attributes exist for specific views but are not required — confirmed the bare form is dominant, 65+ occurrences, in real 18.0/19.0 source)</change>
+    <change version="18" type="not-a-change">Record rules keep using company_ids in domain_force — allowed_company_ids does NOT replace it (confirmed against real addons/account/security/account_security.xml in 18.0/19.0; a previous version of this file incorrectly claimed this as a breaking change)</change>
     <change version="18" type="breaking">group_operator renamed to aggregator on field definitions — confirmed in model_18.py</change>
-    <change version="18" type="new">_check_company_auto = True — automatic company validation on write()</change>
-    <change version="18" type="new">check_company=True on relational fields — automatic cross-company validation</change>
+    <change version="17" type="already-available">_check_company_auto = True — confirmed present in v17 source (account.move.line line 25), NOT a new v18 feature</change>
+    <change version="17" type="already-available">check_company=True on relational fields — same as above, already available in v17</change>
     <change version="18" type="new">read_group() deprecated (v18.2) — use _read_group() / formatted_read_group()</change>
     <change version="18" type="new">@api.private introduced (v18.2) — marks methods not exposed to RPC</change>
     <change version="18" type="new">check_access(), has_access(), _filtered_access() — new access methods (v18.0)</change>
@@ -199,8 +199,9 @@
                               </page>
                           </notebook>
                       </sheet>
-                      <!-- v18+: chatter widget replaces oe_chatter div block -->
-                      <chatter reload_on_follower="True"/>
+                      <!-- v18+: chatter widget replaces oe_chatter div block — bare tag
+                           is the dominant real-world form; add reload_on_* only if needed -->
+                      <chatter/>
                   </form>
               </field>
           </record>
@@ -227,8 +228,11 @@
       ```
     </example>
 
-    <example id="record_rule" title="Record Rule — allowed_company_ids">
+    <example id="record_rule" title="Record Rule — company_ids (unchanged from v17)">
       ```xml
+      <!-- Confirmed against real addons/account/security/account_security.xml —
+           company_ids is correct in v18 (and v19). allowed_company_ids is NOT
+           valid in ir.rule domain_force in any version. -->
       <record id="rule_my_model_company" model="ir.rule">
           <field name="name">My Model: Multi-Company</field>
           <field name="model_id" ref="model_my_model"/>
@@ -236,7 +240,7 @@
           <field name="domain_force">[
               '|',
               ('company_id', '=', False),
-              ('company_id', 'in', allowed_company_ids)
+              ('company_id', 'in', company_ids)
           ]</field>
       </record>
       ```
@@ -332,17 +336,21 @@
       </div>
 
       <!-- CORRECT -->
-      <chatter reload_on_follower="True"/>
+      <chatter/>
       ```
     </antipattern>
 
     <antipattern severity="CRITICAL">
-      ```xml
-      <!-- WRONG: company_ids in record rules -->
-      <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+      Claiming `allowed_company_ids` replaces `company_ids` in record rule `domain_force`
+      in v18 — FALSE (a previous version of this file had this backwards). Confirmed
+      against real addons/account/security/account_security.xml in 18.0/19.0.
 
-      <!-- CORRECT -->
+      ```xml
+      <!-- WRONG — allowed_company_ids is not valid in ir.rule domain_force, in any version -->
       <field name="domain_force">[('company_id', 'in', allowed_company_ids)]</field>
+
+      <!-- CORRECT in v18 (and v19) — unchanged from v17 -->
+      <field name="domain_force">[('company_id', 'in', company_ids)]</field>
       ```
     </antipattern>
 

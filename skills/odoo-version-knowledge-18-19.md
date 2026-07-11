@@ -131,7 +131,7 @@
     <change version="19" type="unchanged">chatter widget — same as v18</change>
     <change version="19" type="unchanged">aggregator on fields — same as v18</change>
     <change version="19" type="unchanged">_check_company_auto and check_company — same as v18</change>
-    <change version="19" type="unchanged">allowed_company_ids in record rules — same as v18</change>
+    <change version="19" type="unchanged">Record rules keep using company_ids in domain_force — same as v17/v18. allowed_company_ids is NOT valid here in any version (confirmed against real addons/account/security/account_security.xml in 19.0) — a previous version of this file, and of the v18 file it references, incorrectly claimed otherwise</change>
   </version_notes>
 
 
@@ -169,13 +169,21 @@
       ```
     </antipattern>
 
-    <antipattern severity="HIGH">
-      ```python
-      # WRONG: odoo.osv deprecated in v19
-      from odoo.osv import expression
+    <antipattern severity="MEDIUM">
+      Using `odoo.osv.expression` for new domain-manipulation code in v19 — the module
+      still exists, but real 19.0 addon code (addons/account/models/*.py, etc.) has moved
+      to the `Domain` class instead. `from odoo import expression` is NOT confirmed as a
+      real import path in 19.0 addon code (zero occurrences found) — do not present it as
+      the replacement; present `Domain` instead.
 
-      # CORRECT
-      from odoo import expression
+      ```python
+      # OLD style — module still present, but no longer how real addon code builds domains
+      from odoo.osv import expression
+      domain = expression.OR([domain_a, domain_b])
+
+      # CURRENT v19 style — confirmed throughout addons/account/models/*.py
+      from odoo.fields import Command, Domain
+      domain = Domain.OR([domain_a, domain_b])
       ```
     </antipattern>
 
@@ -187,7 +195,7 @@
        ============================================================ -->
   <migration_checklist>
     <item priority="CRITICAL">Replace all _sql_constraints lists with models.Constraint() class attributes</item>
-    <item priority="HIGH">Replace from odoo.osv import expression with from odoo import expression</item>
+    <item priority="MEDIUM">Prefer Domain from odoo.fields over odoo.osv.expression for new domain-manipulation code (confirmed the modern pattern in real 19.0 addon code — not a hard requirement, odoo.osv.expression still exists)</item>
     <item priority="HIGH">Replace record._cr, record._context, record._uid with self.env.cr, self.env.context, self.env.uid</item>
     <item priority="MEDIUM">Review pivot views — GROUPING SETS now supported natively, remove workarounds</item>
     <item priority="INFO">No OWL migration required — v19 still uses OWL 2.x</item>

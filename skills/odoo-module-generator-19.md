@@ -17,12 +17,22 @@ Note: v19 is in active development — verify patterns against official source w
     New: `Domain` class from `odoo.fields` — `from odoo.fields import Command, Domain`.
     New: `bypass_search_access=True` on Many2one fields.
     New: `kpi_providers` and `author` keys in manifest.
-    Chatter: same as v18 — `&lt;chatter reload_on_attachment="True"/&gt;`.
+    Chatter: same as v18 — bare, self-closing `&lt;chatter/&gt;` (dominant form in real
+    source, 65+ occurrences with no attributes; optional reload_on_attachment/
+    reload_on_follower/reload_on_post exist for specific views but are not required).
     List views: same as v18 — `&lt;list&gt;` tag.
     OWL: 2.x — same as v17/v18 (OWL 3.x expected in v20, not confirmed in v19).
-    Type hints: recommended convention in ORM core, NOT mandatory in addon code.
+    Type hints: recommended convention in ORM core, NOT mandatory in addon code —
+    confirmed account.move.line (3700+ lines) has only 2 type-hinted methods.
     SQL() builder: recommended, raw parameterized cr.execute() remains valid.
-    Translation: use `self.env._()` instead of `from odoo import _`.
+    Translation: both `from odoo import _` and `self.env._()` remain valid in v19 —
+    confirmed `from odoo import _` still used in 36 files of addons/account/models alone
+    (e.g. account_move.py). `self.env._()` is available but NOT a required replacement.
+    Record rules: `company_ids` in `domain_force` — unchanged from v17/v18. Do NOT use
+    `allowed_company_ids` here (confirmed against real account_security.xml).
+    models.Constraint() and models.Index() are BARE class attributes, never wrapped in a
+    `_sql_constraints=[...]` or `_indexes=[...]` list (confirmed against real
+    account_journal.py, account_move_line.py, account_bank_statement.py).
   </version>
 </version_notes>
 
@@ -168,19 +178,18 @@ class {ModelName}(models.Model):
             if record.amount < 0:
                 raise ValidationError(_("Amount must be positive."))
 
-    # v19: models.Constraint() replaces _sql_constraints list
-    _constraints = [
-        models.Constraint(
-            'UNIQUE(name, company_id)',
-            'Name must be unique per company!',
-        ),
-    ]
+    # v19: models.Constraint() replaces _sql_constraints — a BARE class attribute,
+    # never wrapped in a list (confirmed account_journal.py lines 36-39)
+    _name_company_uniq = models.Constraint(
+        'UNIQUE(name, company_id)',
+        'Name must be unique per company!',
+    )
 
-    # v19: models.Index() replaces manual index patterns
-    _indexes = [
-        models.Index(('name', 'company_id')),
-        models.Index(('state',), where="state != 'cancelled'"),
-    ]
+    # v19: models.Index() replaces manual index creation — also a bare attribute,
+    # a single SQL-like column-list string, with an optional trailing WHERE clause
+    # for partial indexes (confirmed account_move_line.py lines 480-489)
+    _name_company_idx = models.Index("(name, company_id)")
+    _state_idx = models.Index("(state) WHERE state != 'cancelled'")
 
     # === CRUD METHODS === #
     @api.model_create_multi
@@ -337,8 +346,8 @@ class {ModelName}Line(models.Model):
                         </page>
                     </notebook>
                 </sheet>
-                <!-- v19: same chatter tag as v18 -->
-                <chatter reload_on_attachment="True"/>
+                <!-- v19: same chatter tag as v18 — bare form is dominant in real source -->
+                <chatter/>
             </form>
         </field>
     </record>
@@ -450,19 +459,31 @@ registry.category("actions").add("{module_name}.{component_name}", {ComponentNam
 <antipatterns>
 
   <antipattern severity="CRITICAL">
-    Using `_sql_constraints` list — replaced by `models.Constraint()` in v19.
+    Using `_sql_constraints` list — replaced by `models.Constraint()` in v19. It is a
+    BARE class attribute, never wrapped in a `_constraints=[...]` or similar list
+    (confirmed against real account_journal.py, account_move_line.py in 19.0 source).
 
     ```python
-    # WRONG in v19
+    # WRONG in v19 (old style)
     _sql_constraints = [
         ('name_uniq', 'UNIQUE(name, company_id)', 'Name must be unique!'),
     ]
 
-    # CORRECT in v19
+    # ALSO WRONG in v19 — models.Constraint() does not exist in real source
     _constraints = [
         models.Constraint('UNIQUE(name, company_id)', 'Name must be unique!'),
     ]
+
+    # CORRECT in v19
+    _name_uniq = models.Constraint('UNIQUE(name, company_id)', 'Name must be unique!')
     ```
+  </antipattern>
+
+  <antipattern severity="HIGH">
+    Claiming `self.env._()` replaces `from odoo import _` in v19 — both remain valid.
+    `from odoo import _` is still used throughout real 19.0 addon code (e.g. 36 files
+    in addons/account/models alone, including account_move.py). Do not flag the classic
+    import as an error.
   </antipattern>
 
   <antipattern severity="CRITICAL">
@@ -474,19 +495,6 @@ registry.category("actions").add("{module_name}.{component_name}", {ComponentNam
 
     # CORRECT in v19
     from odoo.tools import SQL
-    ```
-  </antipattern>
-
-  <antipattern severity="HIGH">
-    Using `from odoo import _` for translation in v19 — use `self.env._()`.
-
-    ```python
-    # WRONG in v19
-    from odoo import _
-    raise UserError(_("Message"))
-
-    # CORRECT in v19
-    raise UserError(self.env._("Message"))
     ```
   </antipattern>
 

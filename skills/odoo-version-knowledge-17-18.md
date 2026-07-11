@@ -15,12 +15,12 @@
   <version_notes>
     <!-- Source: ORM changelog + confirmed in codebase -->
     <change version="18" type="breaking">&lt;tree&gt; tag renamed to &lt;list&gt; in XML views — use odoo-bin upgrade_code --from 17.0 --to 18.0</change>
-    <change version="18" type="breaking">&lt;div class="oe_chatter"&gt; block replaced by &lt;chatter reload_on_attachment="True"/&gt; widget</change>
-    <change version="18" type="breaking">company_ids replaced by allowed_company_ids in record rules</change>
+    <change version="18" type="breaking">&lt;div class="oe_chatter"&gt; block replaced by the bare, self-closing &lt;chatter/&gt; tag (optional reload_on_attachment/reload_on_follower/reload_on_post attributes exist for specific views but are not required)</change>
+    <change version="18" type="not-a-change">Record rules keep using company_ids in domain_force — allowed_company_ids does NOT replace it (confirmed against real addons/account/security/account_security.xml in 18.0/19.0; a previous version of this file incorrectly claimed this as a breaking change)</change>
     <change version="18" type="breaking">group_operator renamed to aggregator on field definitions — confirmed in model_18.py</change>
     <change version="18" type="breaking">@odoo-module comment no longer required in JS — use direct ES module imports</change>
-    <change version="18" type="new">_check_company_auto = True — automatic company validation on write()</change>
-    <change version="18" type="new">check_company=True on relational fields — automatic cross-company validation</change>
+    <change version="17" type="already-available">_check_company_auto = True — confirmed present in v17 source (account.move.line line 25), NOT a new v18 feature. Still worth adopting on multi-company models that don't use it yet.</change>
+    <change version="17" type="already-available">check_company=True on relational fields — same as above, already available in v17</change>
     <change version="18" type="new">read_group() deprecated (v18.2) — use _read_group() / formatted_read_group()</change>
     <change version="18" type="new">@api.private introduced (v18.2) — marks methods not exposed to RPC</change>
     <change version="18" type="new">check_access(), has_access(), _filtered_access() — new access methods</change>
@@ -64,18 +64,23 @@
       ```
     </example>
 
-    <example id="record_rule" title="Record Rule — allowed_company_ids">
+    <example id="record_rule" title="Record Rule — company_ids unchanged in v18 (corrected)">
       ```xml
       <!-- v17 -->
       <field name="domain_force">[('company_id', '=', company_id)]</field>
 
-      <!-- v18 -->
+      <!-- v18 — same variable, no change. Confirmed against real
+           addons/account/security/account_security.xml (18.0/19.0 branches). -->
       <field name="domain_force">[
           '|',
           ('company_id', '=', False),
-          ('company_id', 'in', allowed_company_ids)
+          ('company_id', 'in', company_ids)
       ]</field>
       ```
+      `allowed_company_ids` is a real v18+ context variable, but it belongs to view-level
+      field `domain=` attributes (client-side, evaluated against the user's currently
+      selected companies) — a different context from `ir.rule.domain_force`, which is
+      evaluated server-side and has always used `company_ids`.
     </example>
 
   </examples>
@@ -111,7 +116,12 @@
           <field name="message_ids"/>
       </div>
 
-      <!-- v18 -->
+      <!-- v18 — bare, self-closing tag is the dominant form in real source (65+
+           occurrences with no attributes across 18.0/19.0 addons) -->
+      <chatter/>
+
+      <!-- v18 — optional attributes exist for specific reload behaviors, add only
+           when actually needed (confirmed in account_move_views.xml, hr_employee_views.xml) -->
       <chatter reload_on_attachment="True"/>
       ```
     </example>
@@ -267,10 +277,10 @@
        ============================================================ -->
   <migration_checklist>
     <item priority="CRITICAL">Replace all &lt;tree&gt; tags with &lt;list&gt; in XML views</item>
-    <item priority="CRITICAL">Replace &lt;div class="oe_chatter"&gt; blocks with &lt;chatter reload_on_attachment="True"/&gt;</item>
-    <item priority="CRITICAL">Update record rules from company_ids to allowed_company_ids</item>
-    <item priority="HIGH">Add _check_company_auto = True to multi-company models</item>
-    <item priority="HIGH">Add check_company=True to relational fields on multi-company models</item>
+    <item priority="CRITICAL">Replace &lt;div class="oe_chatter"&gt; blocks with the bare &lt;chatter/&gt; tag (add reload_on_attachment/reload_on_follower/reload_on_post only if that specific behavior is needed)</item>
+    <item priority="NONE">Record rules: no action needed — company_ids in domain_force is unchanged in v18 (do NOT replace with allowed_company_ids)</item>
+    <item priority="HIGH">Adopt _check_company_auto = True on multi-company models that don't use it yet (available since v17, not new — just good practice if missing)</item>
+    <item priority="HIGH">Adopt check_company=True on relational fields on multi-company models that don't use it yet (same — available since v17)</item>
     <item priority="HIGH">Rename group_operator to aggregator on all field definitions</item>
     <item priority="HIGH">Remove /** @odoo-module **/ from JS files</item>
     <item priority="HIGH">Migrate read_group() to _read_group() / formatted_read_group()</item>
@@ -304,7 +314,20 @@
       </div>
 
       <!-- CORRECT -->
-      <chatter reload_on_attachment="True"/>
+      <chatter/>
+      ```
+    </antipattern>
+
+    <antipattern severity="CRITICAL">
+      Claiming `allowed_company_ids` replaces `company_ids` in record rule `domain_force`
+      in v18 — FALSE, confirmed against real 18.0/19.0 source.
+
+      ```xml
+      <!-- WRONG — allowed_company_ids is not valid in ir.rule domain_force, in any version -->
+      <field name="domain_force">[('company_id', 'in', allowed_company_ids)]</field>
+
+      <!-- CORRECT in both v17 and v18 -->
+      <field name="domain_force">[('company_id', 'in', company_ids)]</field>
       ```
     </antipattern>
 
