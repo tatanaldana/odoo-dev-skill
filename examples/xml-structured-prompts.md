@@ -3,9 +3,11 @@
 The natural-language prompts in [`common-tasks.md`](common-tasks.md) work well for
 quick, single-shot requests. For larger or more precise specs — several fields, several
 files, or anything you want the skill to follow exactly without ambiguity — you can
-write the request using the same XML tag vocabulary `SKILL.md` itself uses
-(`<task>`, `<field>`, `<version>`, etc.). This gives the assistant a spec it can parse
-deterministically instead of inferring intent from prose.
+write the request with a simple XML tag vocabulary of your own (`<task>`, `<field>`,
+`<version>`, etc.), shown below. This is purely a request-formatting convention;
+`SKILL.md` and every `skills/`/`agents/` file are plain markdown internally (no XML),
+but the assistant still parses a well-formed XML request deterministically instead of
+inferring intent from prose.
 
 Use this style when:
 - the request has more than ~4-5 fields/parameters and prose would get unwieldy

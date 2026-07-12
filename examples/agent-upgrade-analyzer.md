@@ -20,7 +20,7 @@ Use when: analyzing a migration between Odoo versions before touching code.
 
 ---
 
-**Expected behavior:** the agent references `<breaking_changes>` from `SKILL.md`'s
-`<version_router>` for the exact `from`/`to` pair, lists affected files/patterns, and
+**Expected behavior:** the agent references the "Breaking changes (quick ref)" table
+in `SKILL.md` for the exact `from`/`to` pair, lists affected files/patterns, and
 does not silently assume a single-version file when two versions are in scope — it
 should load the `{pattern}-{vA}-{vB}.md` migration guide file instead.

@@ -8,238 +8,119 @@ description: >
 versions: "17,18,19"
 ---
 
-Read `__manifest__.py` before anything else. Extract the version field
-(`X.0.Y.Z`) — the first number is the Odoo major version (17, 18 or 19).
-**If the version cannot be determined, stop and ask before proceeding.**
-**If the version is below 17, stop — this skill covers 17, 18 and 19 only.**
+Read `__manifest__.py` first. Extract version (`X.0.Y.Z`) — first number
+is Odoo major (17, 18 or 19). **If unknown, ask. Below 17, stop.**
 
-Communicate with the user in their language. Code, variables, and docstrings
-always in English.
+Communicate with the user in their language. Code/variables/docstrings
+in English.
 
 ---
 
-## Classify the task
+## Task routing
 
-**Simple** — single file, single field, single view tweak, quick fix:
-proceed directly to [Simple task workflow](#simple-task-workflow).
+**Simple** (single file/field/view fix) → check forbidden rules below,
+read the matching pattern file, write code.
 
-**Complex** — new module, new model, migration between versions, multiple
-files, or architectural decision:
+**Complex** (new module, new model, migration, multi-file) →
 Read `agents/odoo-context-gatherer.md` and follow its workflow.
-
----
-
-## Simple task workflow
-
-1. Check the [Forbidden rules](#forbidden-rules) before writing any line.
-2. Read the relevant file from the [Pattern index](#pattern-index) using
-   the Read tool before writing any code.
-3. Apply [Development standards](#development-standards).
-4. Write the code.
 
 ---
 
 ## Forbidden rules
 
-CRITICAL — break the module or cause data loss:
+CRITICAL:
+- No `cr.commit()`/`cr.rollback()` unless you own the cursor.
+- No raw SQL when ORM suffices — use `search()`, `read_group()`, `filtered()`.
+- No `attrs=` in v17+ — use `invisible=` directly.
+- No full view replacement — always xpath + inherit.
+- No `# -*- coding: utf-8 -*-`.
 
-- Never call `cr.commit()` or `cr.rollback()` manually unless you created
-  your own cursor.
-- Never use raw SQL (`cr.execute`) when the ORM can do the same — use
-  `search()`, `read_group()`, or `filtered()` instead.
-- Never use `attrs=` for visibility in v17+ — use `invisible=` directly.
-- Never replace XML views entirely — always use xpath + inherit.
-- Never add `# -*- coding: utf-8 -*-` — Python 3 does not need it.
+HIGH:
+- No `browse()`/`search()` inside loops — use `mapped()`/`filtered()`.
+- No ORM calls in `@api.depends` without full dependency chain.
+- No hardcoded IDs — `env.ref('xml_id')`.
+- `self.ensure_one()` as first line of every `action_*`.
+- No broad `except Exception` without savepoint.
+- `_()` only on literals: `_('text %s', var)`.
 
-HIGH — silent bugs, hard to detect:
-
-- Never call `browse()` or `search()` inside a loop — use `mapped()` or
-  `filtered()`.
-- Never make ORM calls inside `@api.depends` without listing the full
-  dependency chain.
-- Never hardcode database IDs — always use `xml_id` with `env.ref()`.
-- Always call `self.ensure_one()` as the first line of every `action_*` method.
-- Never catch broad exceptions (`except Exception`) without a savepoint.
-- Never use `_()` on dynamic strings or concatenations — only
-  `_('literal')` or `_('pattern %s', variable)`.
-
-MEDIUM — standard violations:
-
-- Never use `print()` — use `_logger.info / warning / error`.
-- Declare model attributes in this order: `_name/_description/_inherit` →
-  default methods → fields → SQL constraints → compute/search/inverse →
-  `@api.constrains/@api.onchange` → CRUD overrides → `action_*` → business
-  methods.
-- Many2one fields require `_id` suffix; One2many/Many2many require `_ids`.
-- Model `_name` must be singular (`sale.order` not `sale.orders`).
-- Never include the word "wizard" in transient model names — use
-  `base_model.action` pattern (e.g. `account.invoice.make`).
-- Never name a controller file `main.py` — use `module_name.py`.
-
----
-
-## Development standards
-
-**Python:** PEP8, SOLID, DRY, KISS. Always `super()` without arguments.
-Imports: stdlib → odoo core → odoo addons, alphabetical within each group.
-
-**JavaScript:** ES6+, PascalCase classes, one component per file.
-OWL 2.x for v17, v18, and v19. See `skills/odoo-owl-components-{version}.md`.
-
-**XML:** `invisible=` only — `attrs=` was removed in v17.
-Always inherit with xpath, never replace a view.
-
-**Security:** `ir.model.access.csv` is required for every new model —
-no exceptions.
-
-**Performance:** No N+1 — never `search()` or `browse()` per record.
-Use `mapped()`, `filtered()`, `read_group()`.
-
----
-
-## Breaking changes
-
-| From → To | Change |
-|-----------|--------|
-| 17 → 18 | `group_operator=` → `aggregator=` on fields |
-| 17 → 18 | `<tree>` → `<list>` in views |
-| 17 → 18 | `<div class="oe_chatter">` → `<chatter/>` tag |
-| 17 → 18 | `@odoo-module` no longer required in JS |
-| 17 → 18 | ORM constructor refactored (no args) |
-| 18 → 19 | `orm.readGroup()` removed → `orm.formattedReadGroup()` |
-| 18 → 19 | `_sql_constraints` → `models.Constraint()` |
-| 18 → 19 | Manual index definitions → `models.Index()` |
-| 18 → 19 | SQL import: `odoo.tools.sql` → `odoo.tools` |
-
-Version-specific files: `skills/odoo-version-knowledge-{version}.md`
-Migration guides: `skills/{pattern}-17-18.md`, `skills/{pattern}-18-19.md`
+MEDIUM:
+- No `print()` — use `_logger`.
+- Model attribute order: `_name/_inherit` → fields → constraints → compute → CRUD → actions → business.
+- M2O → `_id`, O2M/M2M → `_ids`.
+- Singular `_name` (`sale.order` not `sale.orders`).
 
 ---
 
 ## Pattern index
 
-Read the relevant file using the Read tool before writing any code.
+Read the file **before** writing code:
 
 | Keywords | File |
 |----------|------|
-| owl, component, client action, dashboard, frontend | `skills/odoo-owl-components.md` |
-| qweb, template, t-if, t-foreach, t-call, t-slot | `skills/qweb-template-patterns.md` |
-| field widget, custom widget, render field | `skills/widget-field-patterns.md` |
-| computed, depends, inverse, stored compute | `skills/computed-field-patterns.md` |
-| constraint, validation, check, _sql_constraints | `skills/constraint-patterns.md` |
-| onchange, dynamic domain, conditional field | `skills/onchange-dynamic-patterns.md` |
+| owl, component, dashboard, frontend | `skills/odoo-owl-components.md` |
+| qweb, template, t-if, t-foreach | `skills/qweb-template-patterns.md` |
+| field widget, custom widget | `skills/widget-field-patterns.md` |
+| computed, depends, inverse, stored | `skills/computed-field-patterns.md` |
+| constraint, validation, _sql_constraints | `skills/constraint-patterns.md` |
+| onchange, dynamic domain | `skills/onchange-dynamic-patterns.md` |
 | view, form, list, kanban, search, pivot | `skills/xml-view-patterns.md` |
-| workflow, state machine, statusbar, button transition | `skills/workflow-state-patterns.md` |
-| wizard, transient, dialog, popup | `skills/wizard-patterns.md` |
-| cron, scheduled action, automation rule | `skills/cron-automation-patterns.md` |
-| mail, email, chatter, activity, message_post | `skills/mail-notification-patterns.md` |
-| sequence, numbering, auto-increment | `skills/sequence-numbering-patterns.md` |
-| controller, http route, api endpoint, rest, json-rpc | `skills/controller-api-patterns.md` |
-| external api, webhook, sync, xml-rpc | `skills/external-api-patterns.md` |
-| portal, token, share link, CustomerPortal | `skills/portal-access-patterns.md` |
-| fastapi, pydantic, openapi, swagger, oca api | `skills/fastapi-patterns.md` |
-| multi-company, res.company, company_ids, with_company | `skills/multi-company-patterns.md` |
-| inherit, extend, override, _inherit, _inherits | `skills/inheritance-patterns.md` |
-| assets, javascript, css, scss, bundle | `skills/assets-bundling-patterns.md` |
-| context, env, sudo, with_context, with_user | `skills/context-environment-patterns.md` |
-| performance, optimization, index, prefetch, N+1 | `skills/odoo-performance-guide.md` |
-| exception, UserError, ValidationError, AccessError | `skills/error-handling-patterns.md` |
-| test, unittest, TransactionCase, HttpCase, mock | `skills/odoo-test-patterns.md` |
-| report, pdf, QWeb report, print | `skills/report-patterns.md` |
-| settings, res.config.settings, ir.config_parameter | `skills/config-settings-patterns.md` |
-| translation, i18n, language, _lt, LazyTranslate | `skills/translation-i18n-patterns.md` |
+| workflow, state machine, statusbar | `skills/workflow-state-patterns.md` |
+| wizard, transient, dialog | `skills/wizard-patterns.md` |
+| cron, scheduled action | `skills/cron-automation-patterns.md` |
+| mail, chatter, activity, message_post | `skills/mail-notification-patterns.md` |
+| sequence, numbering | `skills/sequence-numbering-patterns.md` |
+| controller, http route, json-rpc | `skills/controller-api-patterns.md` |
+| external api, webhook, xml-rpc | `skills/external-api-patterns.md` |
+| portal, token, share link | `skills/portal-access-patterns.md` |
+| fastapi, pydantic, openapi | `skills/fastapi-patterns.md` |
+| multi-company, company_ids | `skills/multi-company-patterns.md` |
+| inherit, extend, override | `skills/inheritance-patterns.md` |
+| assets, javascript, css, scss | `skills/assets-bundling-patterns.md` |
+| context, env, sudo, with_context | `skills/context-environment-patterns.md` |
+| performance, index, prefetch, N+1 | `skills/odoo-performance-guide.md` |
+| exception, UserError, AccessError | `skills/error-handling-patterns.md` |
+| test, unittest, TransactionCase | `skills/odoo-test-patterns.md` |
+| report, pdf, QWeb report | `skills/report-patterns.md` |
+| settings, res.config.settings | `skills/config-settings-patterns.md` |
+| translation, i18n, _lt | `skills/translation-i18n-patterns.md` |
 | domain, filter, search criteria | `skills/domain-filter-patterns.md` |
 
-Versioned families (prefer version-specific file when it exists):
-`odoo-version-knowledge`, `odoo-model-patterns`, `odoo-module-generator`,
-`odoo-owl-components`, `odoo-security-guide`
+Versioned families: `odoo-version-knowledge`, `odoo-model-patterns`,
+`odoo-module-generator`, `odoo-owl-components`, `odoo-security-guide`
+→ append `-{version}.md` (e.g. `odoo-model-patterns-19.md`)
+→ migration: append `-17-18.md` or `-18-19.md`
 
 ---
 
-## Context management
+## Breaking changes (quick ref)
 
-This section defines the agent's automatic behavior — no special prompts
-required from the user.
+| Change | Versions |
+|--------|----------|
+| `group_operator=` → `aggregator=` | 17→18 |
+| `<tree>` → `<list>` | 17→18 |
+| `<div class="oe_chatter">` → `<chatter/>` | 17→18 |
+| `@odoo-module` no longer required | 17→18 |
+| `orm.readGroup()` → `orm.formattedReadGroup()` | 18→19 |
+| `_sql_constraints` → `models.Constraint()` | 18→19 |
+| SQL import: `odoo.tools.sql` → `odoo.tools` | 18→19 |
 
-### Step 1 — Resolve the skill installation path (once per task)
-
-Determine the absolute path to the installed skill. Used only to construct
-the warning message in Step 2 if hooks are missing.
-
-| Platform | Path |
-|---|---|
-| Linux / macOS | `$HOME/.claude/skills/odoo-dev-skill` |
-| Windows | `%USERPROFILE%\.claude\skills\odoo-dev-skill` |
-
-If the environment variable is unavailable, omit the path from the warning
-and direct the user to run `npx github:tatanaldana/odoo-dev-skill init`
-from the project root.
-
-### Step 2 — Verify hooks are configured in this project
-
-Read `.claude/settings.json` in the project root and check whether the
-odoo-dev-skill hooks (`context_session_guard.py`, `odoo_edit_guard.py`)
-are already declared.
-
-- **Both hooks present** → proceed silently.
-- **File missing or hooks absent** → inform the user once, clearly and briefly,
-  then continue working normally without blocking:
-
-> "Los hooks de odoo-dev-skill no están configurados en este proyecto.
-> Para activarlos desde la próxima sesión de Claude Code, ejecuta este
-> comando desde la raíz del proyecto y reinicia Claude Code:
-> `npx github:tatanaldana/odoo-dev-skill init`"
-
-Do not write or modify `settings.json` — that is the responsibility of the
-`init` command. Do not repeat this warning on subsequent prompts in the
-same session.
-```
-
-### Step 3 — Load or initialize `context_session.xml`
-
-Check `.claude/odoo-dev-skill/context_session.xml`:
-- Exists, same task → read once and resume; do not re-ask answered questions.
-- Exists, different task → ask the user before overwriting.
-- Does not exist → create `.claude/odoo-dev-skill/` directory if needed, then
-  create `context_session.xml` from `templates/context_session.xml`, filling
-  `id` (short slug), `started` (ISO timestamp), and `odoo_version`.
-
-### During the task
-
-Hold state in memory. Write `context_session.xml` only at **logical
-checkpoints** — a coherent unit of work complete (model + its views, not file
-by file). Set `status="checkpoint"` on that write. Never re-read the file
-between checkpoints; one read at session start is enough.
-
-**Before responding**, if the user's message signals task completion, set
-`status="completed"` and write `context_session.xml` — do not wait for the
-Stop hook to do it. The hook is a safety net, not the primary mechanism.
-
-**Status lifecycle:**
-
-| status | When the agent sets it | What the Stop hook does |
-|---|---|---|
-| `in_progress` | Default; task active | Checks budget + stale files; blocks if either fails |
-| `checkpoint` | Logical block just finished | Allows stop cleanly |
-| `completed` | Agent detected task end | Archives to `history_context.xml`, resets file, allows stop |
-
-**Signals that indicate `completed`** — detect naturally:
-- Explicit: "terminamos", "listo", "perfecto así", "esto es todo", "abre el PR",
-  "mergea", "done", "ship it", "that's all"
-- Implicit: user requests full module review, asks to generate the final
-  `__manifest__.py` with all files listed, or asks to run the linter on the
-  whole module.
-
-Keep `context_session.xml` under ~12,000 characters. Compress `<decisions>`
-and `<files_touched>` into denser summaries if it grows too large.
+Full details → `skills/odoo-version-knowledge-{from}-{to}.md`
 
 ---
 
 ## Agents
 
-To invoke an agent, Read its file and follow its workflow:
+| Task | File |
+|------|------|
+| Code review / security audit | `agents/odoo-code-reviewer.md` |
+| Migration between versions | `agents/odoo-upgrade-analyzer.md` |
+| Pattern lookup | `agents/odoo-skill-finder.md` |
+| Guidelines validation | `agents/odoo-coding-guidelines-validator.md` |
+| Complex task context | `agents/odoo-context-gatherer.md` |
 
-- Code review or security audit → Read `agents/odoo-code-reviewer.md`
-- Migration between versions → Read `agents/odoo-upgrade-analyzer.md`
-- Precise pattern lookup → Read `agents/odoo-skill-finder.md`
-- Guidelines validation → Read `agents/odoo-coding-guidelines-validator.md`
+---
+
+## Context session management
+
+See `skills/context-session-management.md` for the full protocol
+(context_session.xml lifecycle, hooks verification, status transitions).

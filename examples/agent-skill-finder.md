@@ -21,7 +21,7 @@ want to explore the library itself rather than generate code immediately.
 
 ---
 
-**Expected behavior:** the agent walks `<pattern_index>` in `SKILL.md`, points to the
+**Expected behavior:** the agent walks the "Pattern index" table in `SKILL.md`, points to the
 specific file and category, and — when the request is ambiguous between two
 patterns — explains the distinction (e.g. `onchange-dynamic-patterns.md` for
 non-persisted UI reactions vs. `computed-field-patterns.md` for stored/computed values)
