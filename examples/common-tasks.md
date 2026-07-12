@@ -11,7 +11,7 @@ response looks like.
 > Crea un nuevo modelo `library.book` en el módulo `library_management` para Odoo 18,
 > con campos `name`, `author_id` (Many2one a `res.partner`) y `available` (Boolean).
 
-**Triggers:** `skills/odoo-model-patterns-18.md` via `<version_router>`.
+**Triggers:** `skills/odoo-model-patterns-18.md` via the "Pattern index" table.
 
 **Expected behavior:** the skill runs the mandatory reasoning block (new model = complex
 task), checks for an existing `library_management` module before generating anything,

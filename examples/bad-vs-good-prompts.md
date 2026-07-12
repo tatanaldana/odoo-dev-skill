@@ -1,8 +1,8 @@
 # Bad vs. Good Prompts
 
-The skill matches keywords against `<activation_triggers>` and `<pattern_index>` in
-`SKILL.md`. A vague prompt gives it nothing to match, so it falls back to generic
-knowledge instead of the version-specific pattern file. These pairs show the difference.
+The skill matches keywords against the "Pattern index" table in `SKILL.md`. A vague
+prompt gives it nothing to match, so it falls back to generic knowledge instead of the
+version-specific pattern file. These pairs show the difference.
 
 ---
 

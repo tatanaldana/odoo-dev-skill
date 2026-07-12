@@ -12,8 +12,8 @@ This repository is a fork and adaptation of the Odoo plugin from [letzdoo/claude
 - **OCA Standards Strict Adherence**: Enforces PEP8, DRY, KISS, and SOLID principles.
 - **OWL Compatibility**: Complete knowledge of OWL 2.x (v17/v18/v19 — confirmed in v19 source). `@odoo-module` required in v17, optional in v18/v19.
 - **Specialized Agents**: 5 workflows for Context Gathering, Code Review, Upgrade Analysis, Skill Discovery, and Coding Guidelines Validation. 4 of 5 are user-invoked (zero context load); only the Context Gatherer is model-invoked.
-- **31 Skill Files**: Pattern families organized by feature domain, each with version-specific variants (v17, v18, v19, v17-18, v18-19) and a dispatcher. Includes `fastapi-patterns.md` for OCA FastAPI integration.
-- **XML Semantic Structure**: All `skills/` and `agents/` files use semantic XML tags that help AI agents navigate content efficiently. `SKILL.md` is plain markdown for immediate execution.
+- **31 Pattern Families, 57 Files**: Organized by feature domain, each with version-specific variants (v17, v18, v19, v17-18, v18-19) and a dispatcher, plus a dedicated context-session protocol file. Includes `fastapi-patterns.md` for OCA FastAPI integration.
+- **Compressed Plain Markdown**: `SKILL.md`, every `skills/` file, and every `agents/` file are plain markdown (tables, headers, code blocks) — no XML tags. Optimized for low token cost per read while staying easy for both humans and agents to navigate.
 - **Spanish by Default**: The agent communicates in Spanish (or the user's preferred language); code, variables, and docstrings are always in English.
 
 ---
@@ -116,7 +116,7 @@ odoo-dev-skill/
 ├── templates/                             # context_session.xml / history_context.xml starters
 ├── checks/                                # odoo_lint.py — stdlib-only static pre-check
 ├── hooks/                                 # optional Claude Code Stop hook (context discipline)
-└── skills/                               # 31 pattern files (families + dispatchers)
+└── skills/                               # 57 files — 31 pattern families + version dispatchers + 1 protocol file
     ├── odoo-version-knowledge.md         # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
     ├── odoo-model-patterns.md            # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
     ├── odoo-module-generator.md          # dispatcher → v17 / v17-18 / v18 / v18-19 / v19
@@ -147,7 +147,8 @@ odoo-dev-skill/
     ├── config-settings-patterns.md
     ├── multi-company-patterns.md
     ├── error-handling-patterns.md
-    └── translation-i18n-patterns.md
+    ├── translation-i18n-patterns.md
+    └── context-session-management.md    # context_session.xml/history_context.xml protocol
 ```
 
 ---
@@ -165,26 +166,22 @@ of two branches:
 - **Complex** — new module, migration, multiple files, architectural decision:
   delegates to `agents/odoo-context-gatherer.md` which drives from there.
 
-### skills/ and agents/ — XML semantic structure
+### skills/ and agents/ — compressed plain markdown
 
-Pattern files and agent files use semantic XML tags so the agent navigates
-their content without reading everything:
+Pattern files and agent files are plain markdown — headers, tables, and
+fenced code blocks, no XML tags. Every file was compressed (~77% token
+reduction from the original XML-tagged version) while keeping the same
+sections consistently:
 
-```xml
-<pattern>          — root of every skills/ file
-<description>      — what the pattern does and when to use it
-<version_notes>    — per-version differences
-<examples>         — verified code snippets
-<antipatterns>     — what not to do, with severity
+```text
+skills/*.md         — title, version-syntax table, code examples, antipatterns
+agents/*.md          — frontmatter (name/description/disable-model-invocation),
+                       numbered workflow steps, review checklist, output format
 ```
 
-```xml
-<agent>            — root of every agents/ file
-<use_when>         — when to invoke this agent
-<workflow>         — sequential steps with completion criteria
-<review_categories>— checklist items per category
-<output_format>    — exact structure of the report
-```
+The consistent shape lets the agent `Read` a single file and get what it
+needs without scanning unrelated content, at a fraction of the token cost of
+the original XML-tagged files.
 
 ### Agent invocation model
 
@@ -339,9 +336,9 @@ Contributions, issues, and feature requests are welcome.
 
 When contributing, please:
 - Follow the [Odoo Coding Guidelines v19](https://www.odoo.com/documentation/19.0/contributing/development/coding_guidelines.html)
-- `SKILL.md` must stay in plain markdown — no XML in the orchestrator body
-- `skills/` files use `<pattern>` root with `description`, `version_notes`, `examples`, `antipatterns`
-- `agents/` files use `<agent>` root with `use_when`, `workflow`, and completion criteria on each step
+- `SKILL.md`, `skills/`, and `agents/` are all plain markdown — no XML tags anywhere in the repo
+- `skills/` files: title, version-syntax table, code examples, antipatterns — keep it as compressed as the existing files
+- `agents/` files: frontmatter (`name`/`description`/`disable-model-invocation`), numbered workflow steps, review checklist, output format
 - Run the Guidelines Validator on any new pattern files before submitting
 
 ---

@@ -9,10 +9,10 @@ regardless of the prompt language.
 
 ## Why this matters
 
-The skill relies on keyword matching (`<activation_triggers>` and `<pattern_index>` in
-[`SKILL.md`](../SKILL.md)) to decide which pattern file to load and whether to run the
-mandatory reasoning block. A vague prompt gives it less to match against, so it may load
-the wrong pattern file or skip version-specific breaking changes. See
+The skill relies on keyword matching against the "Pattern index" table in
+[`SKILL.md`](../SKILL.md) to decide which pattern file to load and whether to route to
+`agents/odoo-context-gatherer.md`. A vague prompt gives it less to match against, so it
+may load the wrong pattern file or skip version-specific breaking changes. See
 [`bad-vs-good-prompts.md`](bad-vs-good-prompts.md) for a direct comparison.
 
 ## Index
@@ -36,7 +36,7 @@ the wrong pattern file or skip version-specific breaking changes. See
 2. **Name the model or module** you're working on — it helps the skill decide whether to
    search for existing code before generating new code.
 3. **Say what kind of change it is** (new model, inherited view, wizard, controller,
-   migration) — this maps directly to a row in `<pattern_index>`.
+   migration) — this maps directly to a row in the "Pattern index" table.
 4. **For migrations**, mention both versions explicitly (e.g. "de v17 a v18") so the
    skill loads the migration guide file instead of a single-version file.
 5. **For reviews/validation**, point at the file or module, not just "revisa mi código".

@@ -23,7 +23,7 @@ every 2 new Odoo major releases**, and stays frozen in between.
   for consistency.
 - Batching two releases into one refresh means: fewer, larger, more
   deliberate updates; a natural point to re-validate the whole
-  `<version_router>` and `<pattern_index>` in `SKILL.md` at once instead of
+  the "Pattern index" and "Breaking changes" tables in `SKILL.md` at once instead of
   incrementally drifting; and a skill that's explicitly "stable, no action
   needed" for a full release cycle — which is what should be communicated to
   anyone installing it.
@@ -67,8 +67,9 @@ refresh, so the next trigger point is always visible at a glance.
    active coverage. Don't delete them outright in the same commit — move
    them to a clearly-marked `skills/archive/` or note in the PR that they're
    superseded, so anyone still on v17 can find them in git history.
-4. **Update `SKILL.md`** — `<version_router>` (`<load version=.../>` entries
-   and `<breaking_changes>`), and the `versions:` frontmatter field.
+4. **Update `SKILL.md`** — the "Pattern index" table's versioned-families
+   note and the "Breaking changes (quick ref)" table, and the `versions:`
+   frontmatter field.
 5. **Update `README.md`** — the "Version Coverage" table and the versions
    listed in Features/Installation.
 6. **Update `agents/odoo-code-reviewer.md` and

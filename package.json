@@ -1,6 +1,6 @@
 {
   "name": "@tatanaldana/odoo-dev-skill",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Odoo module development skill for Claude Code — versions 17, 18 and 19, OCA standards, specialized agents.",
   "type": "commonjs",
   "bin": {
