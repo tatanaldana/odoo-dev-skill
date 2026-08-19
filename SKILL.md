@@ -124,4 +124,4 @@ Full details → `skills/odoo-version-knowledge-{from}-{to}.md`
 ## Context session management
 
 See `skills/context-session-management.md` for the full protocol
-(context_session.xml lifecycle, hooks verification, status transitions).
+(context_session.md lifecycle, hooks verification, status transitions).

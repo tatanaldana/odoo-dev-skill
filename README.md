@@ -113,7 +113,7 @@ odoo-dev-skill/
 │   ├── odoo-skill-finder.md              # user-invoked — navigate the pattern library
 │   └── odoo-coding-guidelines-validator.md  # user-invoked — validate against official Odoo guidelines
 ├── examples/                              # Sample prompts for each agent/pattern
-├── templates/                             # context_session.xml / history_context.xml starters
+├── templates/                             # context_session.md / history_context.md starters
 ├── checks/                                # odoo_lint.py — stdlib-only static pre-check
 ├── hooks/                                 # optional Claude Code Stop hook (context discipline)
 └── skills/                               # 57 files — 31 pattern families + version dispatchers + 1 protocol file
@@ -148,7 +148,7 @@ odoo-dev-skill/
     ├── multi-company-patterns.md
     ├── error-handling-patterns.md
     ├── translation-i18n-patterns.md
-    └── context-session-management.md    # context_session.xml/history_context.xml protocol
+    └── context-session-management.md    # context_session.md/history_context.md protocol
 ```
 
 ---
@@ -300,9 +300,9 @@ tasks are requested. The assistant will:
 `SKILL.md` defines a convention for two files that track the assistant's
 work over time:
 
-- **`context_session.xml`** — working memory for the current task, capped at
+- **`context_session.md`** — working memory for the current task, capped at
   ~12,000 characters. Read at session start to resume prior context.
-- **`history_context.xml`** — append-only log, one compact entry per finished
+- **`history_context.md`** — append-only log, one compact entry per finished
   session. Auditable over time; intended as raw material for future fine-tuning
   or RAG datasets.
 

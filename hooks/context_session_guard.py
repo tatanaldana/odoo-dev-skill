@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stop hook for odoo-dev-skill: status-aware context_session.xml enforcement.
+"""Stop hook for odoo-dev-skill: status-aware context_session.md enforcement.
 
 Optional, Claude-Code-specific — nothing else in this skill depends on it.
 Wire it into the consuming project's .claude/settings.json using the
@@ -13,12 +13,12 @@ ABSOLUTE path to wherever this skill was installed:
       }
     }
 
-Behavior driven by the status= attribute in context_session.xml:
+Behavior driven by the `- status:` field in context_session.md:
 
   status="in_progress"  Task is active, more prompts expected.
                         - Block if file exceeds ~12,000 char budget.
                         - Block if project files changed more recently than
-                          context_session.xml (stale state), asking the agent
+                          context_session.md (stale state), asking the agent
                           to write a checkpoint before stopping.
 
   status="checkpoint"   Agent just finished a logical block and wrote state.
@@ -28,14 +28,16 @@ Behavior driven by the status= attribute in context_session.xml:
 
   status="completed"    User signalled end of task (natural phrases like
                         "terminamos", "listo", "abre el PR", etc.).
-                        - Archive a <session> entry into history_context.xml.
-                        - Reset context_session.xml to blank template state.
+                        - Archive a session entry into history_context.md.
+                        - Reset context_session.md to blank template state.
                         - Allow stop.
 
   missing / unreadable  Fails open — exit 0, never blocks on infrastructure
                         it cannot verify.
 
-Stdlib only.
+Plain markdown, not XML — cheaper for the agent to read/write and to parse
+here (no tag balancing, just line-oriented "- key: value" fields and
+"## Header" sections). Stdlib only.
 """
 import json
 import os
@@ -46,52 +48,52 @@ from datetime import datetime, timezone
 
 MAX_CHARS = 12000
 CONTEXT_REL = os.path.join(".claude", "odoo-dev-skill")
-CONTEXT_FILENAME = "context_session.xml"
-HISTORY_FILENAME = "history_context.xml"
+CONTEXT_FILENAME = "context_session.md"
+HISTORY_FILENAME = "history_context.md"
 
 BLANK_TEMPLATE = """\
 <!--
-  context_session.xml — per-task working memory for odoo-dev-skill.
+  context_session.md — per-task working memory for odoo-dev-skill.
 
-  Lives at .claude/odoo-dev-skill/context_session.xml inside the project.
+  Lives at .claude/odoo-dev-skill/context_session.md inside the project.
   The agent creates and manages this file automatically — do not edit manually.
   Keep it under ~12,000 characters; the agent compresses it when needed.
 
   status lifecycle (read by context_session_guard.py Stop hook):
     in_progress → task active, more prompts expected; hook checks for stale files
     checkpoint  → logical block just written; hook lets the agent stop cleanly
-    completed   → user signalled end of task; hook archives to history_context.xml
+    completed   → user signalled end of task; hook archives to history_context.md
                   and resets this file to blank template state
 
   See SKILL.md ## Context management for the full lifecycle.
 -->
-<context_session id="" started="" odoo_version="" status="in_progress" max_chars="12000">
 
-  <task>
-    <description></description>
-    <module></module>
-    <models></models>
-  </task>
+- id:
+- started:
+- odoo_version:
+- status: in_progress
 
-  <state>
-    <patterns_loaded>
-      <!-- <pattern file="skills/odoo-model-patterns-18.md"/> -->
-    </patterns_loaded>
+## Task
 
-    <files_touched>
-      <!-- <file path="models/library_book.py" action="created"/> -->
-    </files_touched>
+- description:
+- module:
+- models:
 
-    <decisions>
-      <!-- <decision>Short, terse rationale for a choice made.</decision> -->
-    </decisions>
+## Patterns loaded
 
-    <open_questions>
-      <!-- <question>Unresolved thing to confirm with the user.</question> -->
-    </open_questions>
-  </state>
+<!-- - skills/odoo-model-patterns-18.md -->
 
-</context_session>
+## Files touched
+
+<!-- - models/library_book.py — created -->
+
+## Decisions
+
+<!-- - Short, terse rationale for a choice made. -->
+
+## Open questions
+
+<!-- - Unresolved thing to confirm with the user. -->
 """
 
 
@@ -108,94 +110,91 @@ def block(reason):
     sys.exit(2)
 
 
-def extract_attr(content, attr):
-    """Extract a single XML attribute value from the context_session root tag."""
-    m = re.search(rf'{attr}="([^"]*)"', content[:500])
+def extract_field(content, key):
+    """Extract the value of a top-level '- key: value' line."""
+    m = re.search(rf"^-\s*{re.escape(key)}:\s*(.*)$", content, re.MULTILINE)
     return m.group(1).strip() if m else ""
 
 
-def extract_tag(content, tag):
-    """Extract inner text of a simple XML tag (first match)."""
-    m = re.search(rf"<{tag}>(.*?)</{tag}>", content, re.DOTALL)
-    return m.group(1).strip() if m else ""
+def extract_section(content, header):
+    """Return the raw text of a '## Header' section, up to the next '## ' or EOF."""
+    m = re.search(
+        rf"^##\s*{re.escape(header)}\s*$(.*?)(?=^##\s|\Z)",
+        content,
+        re.MULTILINE | re.DOTALL,
+    )
+    return m.group(1) if m else ""
 
 
-def extract_list(content, outer, inner):
-    """Extract a list of attribute values from repeated child tags."""
-    block_m = re.search(rf"<{outer}>(.*?)</{outer}>", content, re.DOTALL)
-    if not block_m:
-        return []
-    return re.findall(rf'<{inner}\s+[^/]*?/>', block_m.group(1))
+def extract_bullets(section_text):
+    """Extract real '- item' bullets from a section, ignoring HTML-comment placeholders."""
+    stripped = re.sub(r"<!--.*?-->", "", section_text, flags=re.DOTALL)
+    return [
+        line.strip()[2:].strip()
+        for line in stripped.splitlines()
+        if line.strip().startswith("- ")
+    ]
 
 
 def archive_session(cwd, content, session_file, history_file):
-    """Append a <session> entry to history_context.xml from current context."""
-    session_id   = extract_attr(content, "id") or "unknown"
-    started      = extract_attr(content, "started") or ""
-    odoo_version = extract_attr(content, "odoo_version") or ""
+    """Append a session entry to history_context.md from current context."""
+    session_id   = extract_field(content, "id") or "unknown"
+    started      = extract_field(content, "started") or ""
+    odoo_version = extract_field(content, "odoo_version") or ""
     ended        = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
-    summary      = extract_tag(content, "description") or "No description recorded."
-    module       = extract_tag(content, "module") or ""
 
-    # Collect patterns and files as raw XML snippets
-    patterns_block = re.search(r"<patterns_loaded>(.*?)</patterns_loaded>", content, re.DOTALL)
-    patterns_xml   = patterns_block.group(1).strip() if patterns_block else ""
-    # Strip comment lines
-    patterns_xml   = "\n      ".join(
-        l for l in patterns_xml.splitlines() if l.strip() and not l.strip().startswith("<!--")
-    )
+    task_section = extract_section(content, "Task")
+    summary      = extract_field(task_section, "description") or "No description recorded."
+    module       = extract_field(task_section, "module") or ""
 
-    files_block = re.search(r"<files_touched>(.*?)</files_touched>", content, re.DOTALL)
-    files_xml   = files_block.group(1).strip() if files_block else ""
-    files_xml   = "\n      ".join(
-        l for l in files_xml.splitlines() if l.strip() and not l.strip().startswith("<!--")
-    )
+    patterns = extract_bullets(extract_section(content, "Patterns loaded"))
+    files    = extract_bullets(extract_section(content, "Files touched"))
+
+    patterns_md = "\n".join(f"- {p}" for p in patterns) or "- none recorded"
+    files_md    = "\n".join(f"- {f}" for f in files) or "- none recorded"
 
     entry = f"""
-  <session id="{session_id}" started="{started}" ended="{ended}" odoo_version="{odoo_version}">
-    <summary>{summary}</summary>
-    <module>{module}</module>
-    <patterns_used>
-      {patterns_xml or "<!-- none recorded -->"}
-    </patterns_used>
-    <files_changed>
-      {files_xml or "<!-- none recorded -->"}
-    </files_changed>
-    <outcome status="completed"/>
-  </session>
+## Session {session_id} — {started} → {ended} (Odoo {odoo_version})
+
+- status: completed
+
+**Summary:** {summary}
+
+**Module:** {module}
+
+**Patterns used:**
+{patterns_md}
+
+**Files changed:**
+{files_md}
 """
 
     if os.path.exists(history_file):
         with open(history_file, encoding="utf-8") as f:
             history = f.read()
-        # Insert before closing tag
-        if "</history_context>" in history:
-            history = history.replace("</history_context>", entry + "\n</history_context>")
-        else:
-            history += entry
+        history = history.rstrip("\n") + "\n" + entry
     else:
         history = f"""<!--
-  history_context.xml — append-only log of finished sessions for odoo-dev-skill.
+  history_context.md — append-only log of finished sessions for odoo-dev-skill.
   Never rewrite or delete past entries — this is the audit trail.
-  See SKILL.md ## Context management for the full lifecycle.
+  See SKILL.md -> Context session management for the full lifecycle.
 -->
-<history_context>
-{entry}
-</history_context>
-"""
+
+# History Context
+{entry}"""
 
     with open(history_file, "w", encoding="utf-8") as f:
         f.write(history)
 
 
 def reset_session(session_file):
-    """Reset context_session.xml to blank template."""
+    """Reset context_session.md to blank template."""
     with open(session_file, "w", encoding="utf-8") as f:
         f.write(BLANK_TEMPLATE)
 
 
 def check_stale_files(cwd, session_mtime):
-    """Return list of project files modified after context_session.xml."""
+    """Return list of project files modified after context_session.md."""
     try:
         result = subprocess.run(
             ["git", "-C", cwd, "status", "--porcelain"],
@@ -233,7 +232,7 @@ def main():
     except OSError:
         sys.exit(0)
 
-    status = extract_attr(content, "status")
+    status = extract_field(content, "status")
 
     # --- completed: archive and reset, then allow stop ---
     if status == "completed":
@@ -244,7 +243,7 @@ def main():
         except OSError as e:
             # Archive failed — block so the agent can retry manually
             block(
-                f"Failed to archive session to history_context.xml: {e}. "
+                f"Failed to archive session to history_context.md: {e}. "
                 "Fix the issue and try again, or archive manually before stopping."
             )
         sys.exit(0)
@@ -257,9 +256,9 @@ def main():
 
     if len(content) > MAX_CHARS:
         block(
-            f"context_session.xml is {len(content)} chars, over the ~{MAX_CHARS} "
-            "budget. Compress <decisions> and <files_touched> into denser summaries "
-            "before stopping."
+            f"context_session.md is {len(content)} chars, over the ~{MAX_CHARS} "
+            "budget. Compress the Decisions and Files touched sections into "
+            "denser summaries before stopping."
         )
 
     session_mtime = os.path.getmtime(session_file)
@@ -271,9 +270,9 @@ def main():
     if stale:
         shown = ", ".join(stale[:10]) + (" ..." if len(stale) > 10 else "")
         block(
-            f"Files changed after context_session.xml was last updated: {shown}. "
-            "Write a checkpoint (status='checkpoint') or mark the task done "
-            "(status='completed') before stopping."
+            f"Files changed after context_session.md was last updated: {shown}. "
+            "Write a checkpoint (status: checkpoint) or mark the task done "
+            "(status: completed) before stopping."
         )
 
     sys.exit(0)

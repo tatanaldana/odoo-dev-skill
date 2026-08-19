@@ -6,11 +6,12 @@ se encarga del ciclo completo.
 
 | Archivo | Alcance | Tamaño | Propósito |
 |---|---|---|---|
-| `context_session.xml` | una tarea activa | máx ~12.000 chars | memoria de trabajo — módulo, modelos, patterns cargados, decisiones, preguntas abiertas |
-| `history_context.xml` | todas las sesiones | sin límite, append-only | una entrada `<session>` compacta por tarea terminada — auditoría y dataset futuro |
+| `context_session.md` | una tarea activa | máx ~12.000 chars | memoria de trabajo — módulo, modelos, patterns cargados, decisiones, preguntas abiertas |
+| `history_context.md` | todas las sesiones | sin límite, append-only | una entrada `## Session` compacta por tarea terminada — auditoría y dataset futuro |
 
 Ambos viven en `.claude/odoo-dev-skill/` dentro del proyecto Odoo (no en el
-directorio global del skill).
+directorio global del skill). Formato markdown plano (no XML) — más barato
+de leer/escribir para el agente y de parsear para el hook.
 
 ---
 
@@ -21,38 +22,38 @@ y actúa en consecuencia en cada respuesta:
 
 ```
 developer: "Crea el módulo fleet_tracking en Odoo 18"
-  → agente: no existe context_session.xml → lo crea con status="in_progress"
+  → agente: no existe context_session.md → lo crea con status: in_progress
   → agente: genera el modelo base
   → Stop hook: status=in_progress, archivos actualizados → deja pasar
 
 developer: "Ahora las vistas del modelo"
   → agente: trabaja, termina el bloque modelo+vistas
-  → agente: escribe checkpoint con status="checkpoint"
+  → agente: escribe checkpoint con status: checkpoint
   → Stop hook: status=checkpoint → deja pasar sin verificar archivos
 
 developer: "Agrega ir.model.access.csv"
-  → agente: trabaja, escribe checkpoint con status="checkpoint"
+  → agente: trabaja, escribe checkpoint con status: checkpoint
   → Stop hook: status=checkpoint → deja pasar
 
 developer: "Perfecto, esto es todo"         ← señal de cierre natural
-  → agente: detecta cierre, pone status="completed"
-  → Stop hook: status=completed → archiva a history_context.xml
-                                → resetea context_session.xml
+  → agente: detecta cierre, pone status: completed
+  → Stop hook: status=completed → archiva a history_context.md
+                                → resetea context_session.md
                                 → permite el stop
 ```
 
 ---
 
-## El atributo `status` — cómo el hook decide qué hacer
+## El campo `status` — cómo el hook decide qué hacer
 
-El Stop hook (`hooks/context_session_guard.py`) lee el atributo `status` del
-`context_session.xml` en cada respuesta del agente:
+El Stop hook (`hooks/context_session_guard.py`) lee el campo `- status:` del
+`context_session.md` en cada respuesta del agente:
 
 | status | Quién lo pone | Qué hace el hook |
 |---|---|---|
 | `in_progress` | agente al iniciar o entre checkpoints | verifica budget (~12k chars) + archivos desactualizados; bloquea si algo falla |
 | `checkpoint` | agente al terminar un bloque lógico | deja pasar limpio, sin verificar archivos |
-| `completed` | agente al detectar señal de cierre | archiva `<session>` a `history_context.xml`, resetea el XML, deja pasar |
+| `completed` | agente al detectar señal de cierre | archiva una entrada `## Session` a `history_context.md`, resetea el archivo, deja pasar |
 
 ### Señales de cierre que el agente detecta automáticamente
 
@@ -83,7 +84,7 @@ el desarrollador simplemente continúa trabajando con naturalidad:
 
 ```
 developer: "Continuemos con la seguridad de fleet_tracking"
-  → agente: lee context_session.xml una sola vez
+  → agente: lee context_session.md una sola vez
   → retoma desde el último checkpoint sin re-preguntar nada
 ```
 
@@ -123,7 +124,7 @@ npx github:tatanaldana/odoo-dev-skill init --dry-run
 ### Qué pasa en la primera sesión sin `init`
 
 El skill funciona normalmente — el agente sigue `SKILL.md` y archiva a
-`history_context.xml` por instrucción directa. Los hooks no están como
+`history_context.md` por instrucción directa. Los hooks no están como
 respaldo en esa primera sesión, pero el flujo principal no depende de ellos.
 
 El agente avisa una sola vez por sesión si detecta que los hooks no están
@@ -140,8 +141,8 @@ la primera sesión de Claude Code. El install global no se repite.
 
 ```gitignore
 # Contexto personal — ignorar si el historial no es compartido
-.claude/odoo-dev-skill/context_session.xml
-.claude/odoo-dev-skill/history_context.xml
+.claude/odoo-dev-skill/context_session.md
+.claude/odoo-dev-skill/history_context.md
 ```
 
 Eliminar esas líneas si el equipo quiere un historial compartido y versionado
@@ -151,8 +152,9 @@ en el repositorio del proyecto.
 
 ## Por qué importa a largo plazo
 
-Cada `<session>` en `history_context.xml` es un registro estructurado de una
-tarea real: qué se pidió, qué patterns se aplicaron, qué archivos se tocaron
-y cuál fue el resultado. Es exactamente la forma que necesita un dataset para
-evaluar la calidad del skill o construir fine-tuning/RAG desde uso real.
-Mantener las entradas tersas y estructuradas ahora es lo que hace posible eso después.
+Cada entrada `## Session` en `history_context.md` es un registro estructurado
+de una tarea real: qué se pidió, qué patterns se aplicaron, qué archivos se
+tocaron y cuál fue el resultado. Es exactamente la forma que necesita un
+dataset para evaluar la calidad del skill o construir fine-tuning/RAG desde
+uso real. Mantener las entradas tersas y estructuradas ahora es lo que hace
+posible eso después.

@@ -8,6 +8,14 @@ Thumbs.db
 .idea/
 *.swp
 
-# odoo-dev-skill context files (see SKILL.md <context_management>)
+# Python
+__pycache__/
+*.pyc
+
+# odoo-dev-skill context files (see SKILL.md ## Context session management)
 # Local working memory / history log — not meant to be versioned by default.
 .claude/odoo-dev-skill/
+
+# Local session/audit notes — not meant to be versioned
+CHANGELOG_SESSION.md
+CLAUDE.md

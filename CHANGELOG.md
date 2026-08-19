@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `context_session.xml`/`history_context.xml` → `context_session.md`/`history_context.md`.
+  Same rationale as the 1.3.0 skills/agents compression: plain markdown
+  (`- key: value` fields, `## Header` sections, `- ` bullets) is cheaper for
+  the agent to read and write than hand-balanced XML tags, and simpler for
+  `hooks/context_session_guard.py` to parse. `templates/*.xml` replaced by
+  `templates/*.md`; the hook's regex extraction rewritten for the new field/
+  section shape; `SKILL.md`, `skills/context-session-management.md`,
+  `README.md`, and `examples/context-session-and-history.md` updated to
+  match. No migration path from existing `.xml` session files — this is a
+  clean format switch, not a compatibility shim.
+- Corrected ~20 false or miscalibrated Odoo v17→v19 claims across the full
+  `skills/`/`agents/` library (all 57 skill files + 5 agent files +
+  `SKILL.md`), verified against the real Odoo Community source (17.0/18.0/
+  19.0 branches). Most repeated finding: the `SQL()` import path
+  (`odoo.tools.sql` vs `odoo.tools`) was falsely flagged as a v18→v19
+  breaking change in 8 separate files — both forms have always worked since
+  v17. Also corrected: `_sql_constraints` silently no-ops in v19 (was
+  documented as a style preference, not a functional break); `res.groups.
+  category_id`/`res.users.groups_id`/`res.groups.users` renamed in v19;
+  `auto_join=True` silently dropped in v19; the OWL `company` service removed
+  in v19; `_read_group_stage_ids(..., order)` losing its `order` param in
+  v18/v19; several version numbers off by one (changes attributed to the
+  wrong release).
+
 ## [1.3.0] - 2026-07-12
 
 ### Changed

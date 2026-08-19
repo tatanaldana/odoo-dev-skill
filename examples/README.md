@@ -22,7 +22,7 @@ may load the wrong pattern file or skip version-specific breaking changes. See
 | [`common-tasks.md`](common-tasks.md) | Everyday prompts: new model, inheritance, views, wizards, controllers, security, performance |
 | [`bad-vs-good-prompts.md`](bad-vs-good-prompts.md) | Side-by-side of weak vs. well-formed prompts and why the difference matters |
 | [`xml-structured-prompts.md`](xml-structured-prompts.md) | XML-tagged prompts for precise, unambiguous specs (developer-oriented alternative to prose) |
-| [`context-session-and-history.md`](context-session-and-history.md) | How to use `context_session.xml` and `history_context.xml` to track work across turns and sessions |
+| [`context-session-and-history.md`](context-session-and-history.md) | How to use `context_session.md` and `history_context.md` to track work across turns and sessions |
 | [`agent-context-gatherer.md`](agent-context-gatherer.md) | Prompts that trigger `odoo-context-gatherer` before complex code generation |
 | [`agent-code-reviewer.md`](agent-code-reviewer.md) | Prompts that trigger `odoo-code-reviewer` for quality/security audits |
 | [`agent-upgrade-analyzer.md`](agent-upgrade-analyzer.md) | Prompts that trigger `odoo-upgrade-analyzer` for version migrations |

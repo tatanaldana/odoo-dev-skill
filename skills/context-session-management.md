@@ -32,24 +32,24 @@ Read `.claude/settings.json` in the project root and check whether
 Do not write or modify `settings.json` — that's `init`'s job. Do not repeat
 the warning later in the same session.
 
-## Step 3 — Load or initialize `context_session.xml`
+## Step 3 — Load or initialize `context_session.md`
 
-Check `.claude/odoo-dev-skill/context_session.xml`:
+Check `.claude/odoo-dev-skill/context_session.md`:
 - Exists, same task → read once and resume; don't re-ask answered questions.
 - Exists, different task → ask before overwriting.
 - Missing → create `.claude/odoo-dev-skill/` if needed, then create
-  `context_session.xml` from `templates/context_session.xml`, filling `id`
+  `context_session.md` from `templates/context_session.md`, filling `id`
   (short slug), `started` (ISO timestamp), `odoo_version`.
 
 ## During the task
 
-Hold state in memory. Write `context_session.xml` only at **logical
+Hold state in memory. Write `context_session.md` only at **logical
 checkpoints** (a coherent unit of work complete — model + its views, not
-file by file), setting `status="checkpoint"`. Don't re-read the file between
+file by file), setting `status: checkpoint`. Don't re-read the file between
 checkpoints; one read at session start is enough.
 
 **Before responding**, if the user's message signals task completion, set
-`status="completed"` and write the file — don't wait for the Stop hook.
+`status: completed` and write the file — don't wait for the Stop hook.
 The hook is a safety net, not the primary mechanism.
 
 ## Status lifecycle
@@ -58,7 +58,7 @@ The hook is a safety net, not the primary mechanism.
 |---|---|---|
 | `in_progress` | Default; task active | Checks char budget + stale files; blocks if either fails |
 | `checkpoint` | Logical block just finished | Allows clean stop |
-| `completed` | Agent detected task end | Archives to `history_context.xml`, resets file, allows stop |
+| `completed` | Agent detected task end | Archives to `history_context.md`, resets file, allows stop |
 
 **Signals for `completed`:**
 - Explicit: "terminamos", "listo", "perfecto así", "esto es todo", "abre el PR",
@@ -66,5 +66,5 @@ The hook is a safety net, not the primary mechanism.
 - Implicit: user asks for a full module review, the final `__manifest__.py`
   with all files listed, or a lint run over the whole module
 
-Keep `context_session.xml` under ~12,000 characters. Compress `<decisions>`
-and `<files_touched>` into denser summaries if it grows too large.
+Keep `context_session.md` under ~12,000 characters. Compress the Decisions
+and Files touched sections into denser summaries if it grows too large.
