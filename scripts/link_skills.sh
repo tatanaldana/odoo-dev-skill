@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/link-skills.sh
+# scripts/link_skills.sh
 # Links SKILL.md, agents/, skills/, hooks/ and templates/ from this repo into
 # ~/.claude/skills/odoo-dev-skill/ and ~/.agents/skills/odoo-dev-skill/
 # for local development. Changes to the repo are reflected immediately without reinstalling.
@@ -30,31 +30,46 @@ for DEST in "${TARGETS[@]}"; do
 
   mkdir -p "$DEST"
 
+  # ln -sfn only replaces an existing *symlink* atomically. If $2 is a real
+  # file or (non-empty) directory — e.g. left over from a prior `npx`
+  # install — plain `ln -sfn` on BSD/macOS creates the new symlink *inside*
+  # it instead of replacing it, silently leaving the stale copy in place.
+  # Remove any non-symlink leftover first so the link always lands cleanly.
+  link_item() {
+    local src="$1" dst="$2"
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+      if [ ! -L "$dst" ] || [ "$(readlink "$dst")" != "$src" ]; then
+        rm -rf "$dst"
+      fi
+    fi
+    ln -sfn "$src" "$dst"
+  }
+
   # Link SKILL.md
-  ln -sfn "$REPO/SKILL.md" "$DEST/SKILL.md"
+  link_item "$REPO/SKILL.md" "$DEST/SKILL.md"
   echo "linked SKILL.md -> $DEST/SKILL.md"
 
   # Link agents/
   if [ -d "$REPO/agents" ]; then
-    ln -sfn "$REPO/agents" "$DEST/agents"
+    link_item "$REPO/agents" "$DEST/agents"
     echo "linked agents/ -> $DEST/agents"
   fi
 
   # Link skills/
   if [ -d "$REPO/skills" ]; then
-    ln -sfn "$REPO/skills" "$DEST/skills"
+    link_item "$REPO/skills" "$DEST/skills"
     echo "linked skills/ -> $DEST/skills"
   fi
 
   # Link hooks/
   if [ -d "$REPO/hooks" ]; then
-    ln -sfn "$REPO/hooks" "$DEST/hooks"
+    link_item "$REPO/hooks" "$DEST/hooks"
     echo "linked hooks/ -> $DEST/hooks"
   fi
 
   # Link templates/
   if [ -d "$REPO/templates" ]; then
-    ln -sfn "$REPO/templates" "$DEST/templates"
+    link_item "$REPO/templates" "$DEST/templates"
     echo "linked templates/ -> $DEST/templates"
   fi
 

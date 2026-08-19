@@ -105,7 +105,7 @@ odoo-dev-skill/
 ├── bin/
 │   └── install.js                        # npx installer — copies agents/ and skills/ on install
 ├── scripts/
-│   └── link-skills.sh                    # local dev — symlinks repo into ~/.claude/skills/
+│   └── link_skills.sh                    # local dev — symlinks repo into ~/.claude/skills/
 ├── agents/                               # 5 specialized workflow agents
 │   ├── odoo-context-gatherer.md          # model-invoked — gather context before complex code
 │   ├── odoo-code-reviewer.md             # user-invoked — quality and security audit
