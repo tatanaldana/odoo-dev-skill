@@ -7,8 +7,8 @@
 | Feature | v17 | v18 | v19 |
 |---------|-----|-----|-----|
 | Imports | `base64`, `json` in portal | simplified | `Forbidden`, `LazyTranslate`, `str2bool` added |
-| Route syntax | identical | identical | identical |
-| Access check | `check_access_rights` + `check_access_rule` | same | same |
+| `type='json'` routes | works | works | **deprecated alias** for `type='jsonrpc'` (warning, still works) |
+| Access check | `check_access_rights` + `check_access_rule` | **deprecated**, use `check_access(operation)` | same as v18 (old methods still work but warn) |
 
 ---
 
@@ -20,7 +20,7 @@ from odoo.http import request
 
 class MyController(http.Controller):
 
-    @http.route('/my/data', type='json', auth='user')
+    @http.route('/my/data', type='json', auth='user')  # v19: type='jsonrpc' is the non-deprecated name (odoo/http.py, 19.0); 'json' still works as alias
     def get_data(self):
         records = request.env['my.model'].search([])
         return {'data': records.read(['id', 'name', 'state'])}
@@ -59,8 +59,9 @@ class MyPortal(CustomerPortal):
 @http.route('/my/report/<int:doc_id>', type='http', auth='user')
 def download(self, doc_id, report_type='pdf', **kw):
     doc = request.env['my.model'].browse(doc_id)
-    doc.check_access_rights('read')
-    doc.check_access_rule('read')
+    doc.check_access('read')  # v17: use check_access_rights('read') + check_access_rule('read') instead —
+                               # check_access() didn't exist yet (odoo/models.py, 17.0); both old calls are
+                               # deprecated since 18.0 (odoo/models.py 18.0 / odoo/orm/models.py 19.0)
     report = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
         'my_module.action_report', [doc.id])[0]
     return request.make_response(report, headers=[
@@ -79,3 +80,5 @@ def download(self, doc_id, report_type='pdf', **kw):
 | CRITICAL | Never accept arbitrary model names from user input — whitelist |
 | HIGH | `auth='none'` has no env — use `'public'` minimum for env access |
 | MEDIUM | Add `website=True` on portal routes using website templates |
+| MEDIUM | v18+: prefer `check_access(operation)` over `check_access_rights()`/`check_access_rule()` (deprecated since 18.0, still functional but warn) |
+| LOW | v19: prefer `type='jsonrpc'` over `type='json'` in new code — `'json'` is a deprecated alias |

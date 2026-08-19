@@ -10,7 +10,8 @@ OWL stays 2.x. No breaking changes in component API.
 | ORM constructor | `ORM(rpc, user)` | `ORM()` no args |
 | `notification.autocloseDelay` | not available | new (ms) |
 | `registry.addValidation()` | not available | new |
-| `useService("company")` | not available | new |
+
+`useService("company")` is NOT a v17→v18 change — it exists identically in both (`activeCompanyIds`, `currentCompany`, `allowedCompanies`, `setCompanies()`). It is removed in v19 instead (see `odoo-owl-components-18-19.md`).
 
 ## Key points
 
@@ -21,5 +22,4 @@ OWL stays 2.x. No breaking changes in component API.
 ```javascript
 // v18 new features
 this.notification.add("Saved", { type: "success", autocloseDelay: 2000 });
-this.company = useService("company");  // currentCompany, allowedCompanyIds
 ```

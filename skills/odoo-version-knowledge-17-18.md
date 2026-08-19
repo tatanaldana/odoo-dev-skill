@@ -8,15 +8,12 @@
 | List view | `<tree>` | `<list>` |
 | Chatter | `<div class="oe_chatter">` | `<chatter/>` (bare tag dominant) |
 | `@odoo-module` JS | required | optional |
-| `read_group()` | available | deprecated (v18.2) → `_read_group()` |
-| `name_get()` | deprecated | → `_search_display_name` |
+| `read_group()` | available, no deprecation warning | still available; only marked `@api.deprecated` starting v19.0 (NOT v18.2) |
+| `name_get()` | deprecated since v17.0 (not v16.4) | removed as concrete method → `_search_display_name` |
 
 ## New in v18
 
-- `@api.private` — not exposed to RPC
 - `check_access()`, `has_access()`, `_filtered_access()`
-- `odoo.Domain` API
-- `export_string_translation=False`
 - `web.assets_unit_tests` manifest key
 - JS: `autocloseDelay` on notifications
 
@@ -24,7 +21,10 @@
 
 - `_check_company_auto` — available since v17, NOT new
 - Record rules: `company_ids` in `domain_force` — NOT replaced by `allowed_company_ids`
-- `SQL()`: `from odoo.tools.sql import SQL` — same as v17
+- `SQL()`: both `from odoo.tools import SQL` and `from odoo.tools.sql import SQL` work — same as v17 (the top-level form was already the more common one in v17)
+- `@api.private` — available since v17.0, NOT new in v18
+- `export_string_translation=False` — field attribute available since v17.0, NOT new in v18
+- `odoo.Domain`/`odoo.fields.Domain` — does NOT exist in v18 at all (introduced only in v19)
 
 ## Migration checklist
 
@@ -41,9 +41,9 @@ NO CHANGE:
 
 HIGH:
 [ ] Remove @odoo-module from JS
-[ ] read_group() → _read_group()
 
 MEDIUM:
 [ ] Adopt SQL() builder for new code
 [ ] Add type hints to new methods
+[ ] read_group() still works in v18 (not deprecated until v19) — no urgent action needed
 ```

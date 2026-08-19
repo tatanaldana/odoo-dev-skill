@@ -9,12 +9,11 @@ Python 3.12+ | OWL 2.x (NOT 3.x)
 
 | Area | v18 | v19 |
 |------|-----|-----|
-| Constraints | `_sql_constraints = [...]` | `_name = models.Constraint('sql', 'msg')` (bare attribute) |
-| Indexes | manual / `index=True` | `_name = models.Index("(col1, col2)")` (bare attribute) |
-| SQL import | `from odoo.tools.sql import SQL` | `from odoo.tools import SQL` |
+| Constraints | `_sql_constraints = [...]` | `_my_attr = models.Constraint('sql', 'msg')` (arbitrary attribute name, bare instance not a list) |
+| Indexes | manual / `index=True` | `_my_attr = models.Index("(col1, col2)")` (arbitrary attribute name, bare instance not a list) |
 | Domain class | not available | `from odoo.fields import Command, Domain` |
 | M2O bypass | not available | `bypass_search_access=True` |
-| `odoo.osv` | available | deprecated → `from odoo import expression` |
+| `odoo.osv.expression` | available, no warning | deprecated (`DeprecationWarning` at instantiation, "Since 19.0") → use `odoo.fields.Domain` |
 | `record._cr/_context/_uid` | available | deprecated → `self.env.cr/.context/.uid` |
 | OWL `readGroup()` | available | removed → `formattedReadGroup()` |
 | OWL new | — | `orm.cache()`, `webSaveMulti()`, `webResequence()` |
@@ -23,8 +22,8 @@ Python 3.12+ | OWL 2.x (NOT 3.x)
 
 - `<list>`, `<chatter/>`, `aggregator=`, `invisible=` — same
 - `from odoo import _` — still valid (36 files in account/models use it)
-- Type hints — optional (only 2/3700 lines in account.move.line)
-- `SQL()` — recommended not mandatory
+- Type hints — optional (only ~3/3740 lines in account.move.line use them, e.g. `_field_to_sql`, `_reconciled_by_number`)
+- `SQL()` — both `from odoo.tools import SQL` and `from odoo.tools.sql import SQL` work in v17/v18/v19 alike; NOT a v18→v19 breaking change (12 files in v19 addons still use the `.sql` form)
 - Record rules: `company_ids` in `domain_force`
 
 ---
@@ -34,7 +33,7 @@ Python 3.12+ | OWL 2.x (NOT 3.x)
 ```python
 from odoo import api, fields, models, _
 from odoo.fields import Command, Domain
-from odoo.tools import SQL  # NOT odoo.tools.sql
+from odoo.tools import SQL  # from odoo.tools.sql import SQL also still works
 
 class MyModel(models.Model):
     _name = 'my.model'
@@ -77,9 +76,8 @@ registry.category("actions").add("my_module.my_action", MyComponent);
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | `_sql_constraints` → `models.Constraint()` in v19 (bare attribute, never list) |
-| CRITICAL | SQL import: `from odoo.tools import SQL` (not `.sql`) |
+| CRITICAL | `_sql_constraints` → `models.Constraint()` in v19 (bare attribute, never list) — logs `_logger.warning(...)` and is silently non-functional, does not raise |
 | HIGH | `record._cr/_context/_uid` deprecated → use `self.env.*` |
-| HIGH | `from odoo.osv import expression` → `from odoo import expression` |
+| HIGH | `from odoo.osv import expression` → prefer `from odoo.fields import Domain` (the `.osv.expression` module still exists but raises `DeprecationWarning` on use) |
 | HIGH | `models.Constraint()`/`models.Index()` never wrapped in a list |
 | CRITICAL | Type hints NOT mandatory — don't flag absence |

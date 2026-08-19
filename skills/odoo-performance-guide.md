@@ -74,8 +74,8 @@ _partial_idx = models.Index("(account_id) WHERE reconciled IS NOT TRUE")
 ## Raw SQL + cache invalidation
 
 ```python
-# v17/v18: from odoo.tools.sql import SQL
-# v19: from odoo.tools import SQL
+# from odoo.tools import SQL  — works in v17/v18/v19 alike
+# (from odoo.tools.sql import SQL also still works in all three; both are valid)
 self.env.cr.execute(SQL("UPDATE %s SET state = %s WHERE id IN %s",
     SQL.identifier(self._table), 'done', tuple(ids)))
 self.env['my.model'].invalidate_model(['state'])  # REQUIRED after raw SQL

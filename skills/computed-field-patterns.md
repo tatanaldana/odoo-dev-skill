@@ -7,7 +7,9 @@
 | Feature | v17 | v18/v19 |
 |---------|-----|---------|
 | Aggregation | `group_operator='min'` | `aggregator='min'` |
-| SQL import | `odoo.tools.sql` | v18 same, v19: `odoo.tools` |
+| SQL import | `odoo.tools.sql` | `odoo.tools` |
+
+> Both `from odoo.tools.sql import SQL` and `from odoo.tools import SQL` work unchanged in **all three** versions (17.0, 18.0, 19.0) — `odoo/tools/__init__.py` does `from .sql import *` in every branch (confirmed via `git show {17.0,18.0,19.0}:odoo/tools/__init__.py`). There is no v19-specific import break; prefer `from odoo.tools import SQL` for style, not because the other path stops working.
 
 ---
 
@@ -72,5 +74,5 @@ journal_id = fields.Many2one(related='move_id.journal_id', store=True, precomput
 |----------|------|
 | CRITICAL | `@api.depends('move_id')` incomplete — use `@api.depends('move_id.date')` |
 | CRITICAL | No ORM search inside compute without full dependency chain |
-| HIGH | `group_operator=` → `aggregator=` in v18+ |
+| MEDIUM | `group_operator=` → `aggregator=` in v18+ (soft deprecation: still accepted, auto-remapped to `aggregator` with a `DeprecationWarning`, per `odoo/orm/fields.py` line ~485 in 19.0 and `odoo/fields.py` line ~480 in 18.0 — not a hard break) |
 | HIGH | Non-stored compute in domain without `search=` method crashes |

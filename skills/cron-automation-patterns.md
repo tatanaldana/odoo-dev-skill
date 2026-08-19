@@ -14,8 +14,13 @@
         <field name="user_id" ref="base.user_root"/>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>  <!-- v17; may be absent in v18/v19 -->
         <field name="active">False</field>
+        <!-- numbercall/doall: v17 only. Fields REMOVED (not just deprecated) from
+             ir.cron in v18+ — setting them in v18/v19 XML raises a ValueError
+             (unknown field). v18+ replaced them with automatic failure tracking
+             (failure_count, first_failure_date) instead of a fixed call limit. -->
+        <!-- v17-only: <field name="numbercall">-1</field> -->
+        <!-- v17-only: <field name="doall">False</field> -->
     </record>
 </odoo>
 ```
@@ -56,6 +61,7 @@ def _cron_process_records(self):
 | Severity | Rule |
 |----------|------|
 | CRITICAL | `@api.model` required on cron methods |
-| HIGH | `on_write`/`on_create` removed in v17 — use `on_create_or_write` |
+| CRITICAL | v18+: `numbercall`/`doall` fields REMOVED from `ir.cron` (present v17 only) — don't reference them in XML/code targeting v18+ |
+| HIGH | `on_write`/`on_create` are deprecated (not removed) in v17/v18/v19 — prefer `on_create_or_write`, but existing code using them still works on all three |
 | HIGH | `noupdate="1"` required on cron records |
 | MEDIUM | Batch heavy cron operations to avoid timeouts |

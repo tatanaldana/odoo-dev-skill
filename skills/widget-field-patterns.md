@@ -19,7 +19,7 @@ relational autocomplete (Many2OneField), tag-list (Many2ManyTagsField).
 | M2O architecture | monolithic component | monolithic component | delegates to `Many2One` via `computeM2OProps` |
 | M2O `searchThreshold` | not available | not available | new option |
 | M2O registry pattern | `add("many2one", many2OneField)` | same | `add("many2one", { ...buildM2OFieldDescription(Many2OneField) })` |
-| M2M Tags | no structural diff | no structural diff | no structural diff |
+| M2M Tags | base tag-list, `useX2ManyCrud`/`useActiveActions` | + `edit_tags` option / `canEditTags` prop (click tag to open form via `useOpenMany2XRecord`), async update/save split | + `searchThreshold` option (mirrors M2O), `supportedTypes: ["many2many", "one2many"]` (was `["many2many"]`), `extractProps` destructures `placeholder` directly like Char/M2O v19 |
 
 ---
 
@@ -168,6 +168,11 @@ registry.category("fields").add("many2one", { ...buildM2OFieldDescription(Many2O
 
 ## Many2ManyTagsField skeleton
 
+Baseline shape below is accurate for v17/v18; v19 adds `searchThreshold`, widens
+`supportedTypes` to include `"one2many"`, and destructures `placeholder` directly
+in `extractProps` (see version-diff table above) — it is NOT structurally identical
+across all three versions.
+
 ```javascript
 // v17: add /** @odoo-module **/
 import { Many2XAutocomplete, useActiveActions, useX2ManyCrud } from "@web/views/fields/relational_utils";
@@ -225,7 +230,7 @@ registry.category("fields").add("many2many_tags", many2ManyTagsField);
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | No `@odoo-module` in v18/v19 |
+| CRITICAL | Never use `@odoo-module` in v18/v19 — not required (native ESM loading); team convention forbids it in new code even though `odoo/tools/js_transpiler.py` still processes it for backward compat on existing files |
 | CRITICAL | Use `useInputField()` for input binding — NOT `useRecordObserver` |
 | HIGH | v18+: `exprToBoolean` replaces `archParseBoolean` |
 | HIGH | Always include `supportedTypes` in registry registration |

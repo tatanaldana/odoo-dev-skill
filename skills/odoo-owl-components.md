@@ -28,5 +28,5 @@ Route to version-specific file. Do NOT generate code from this file.
 | ORM constructor | `ORM(rpc, user)` | `ORM()` | `ORM()` |
 | `readGroup()` | ✅ | ✅ | REMOVED → `formattedReadGroup()` |
 | `autocloseDelay` | ❌ | ✅ | ✅ |
-| `company` service | ❌ | ✅ | ✅ |
+| `company` service (`useService("company")`) | ✅ | ✅ | ❌ REMOVED → `import { user } from "@web/core/user"` |
 | OWL version | 2.x | 2.x | 2.x (NOT 3.x) |

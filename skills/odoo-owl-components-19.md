@@ -1,7 +1,24 @@
 # OWL Components — v19 (OWL 2.x)
 
 OWL remains 2.x — NOT 3.x. Component API identical to v18.
-Main change: ORM service.
+Main changes: ORM service, `company` service removed.
+
+## `company` service REMOVED in v19
+
+`useService("company")` no longer exists (`addons/web/static/src/webclient/company_service.js` is gone). Multi-company info now lives on the `user` singleton from `@web/core/user`:
+
+```javascript
+// WRONG in v19 — service not registered, throws
+this.company = useService("company");
+
+// CORRECT in v19
+import { user } from "@web/core/user";
+// user.activeCompanies            → array of active company objects (was activeCompanyIds: array of ids)
+// user.activeCompany              → single active company object (was currentCompany)
+// user.allowedCompanies           → array of allowed company objects (was a dict keyed by id)
+// user.allowedCompaniesWithAncestors
+// user.activateCompanies(ids, opts) → was setCompanies(ids, includeChildCompanies)
+```
 
 ## ORM changes in v19
 
@@ -73,5 +90,6 @@ registry.category("fields").add("star_rating", { component: StarRating, supporte
 | Severity | Rule |
 |----------|------|
 | CRITICAL | `orm.readGroup()` removed in v19 — use `formattedReadGroup()` |
+| CRITICAL | `useService("company")` removed in v19 — import `user` from `@web/core/user` instead |
 | CRITICAL | OWL 2.x — NOT 3.x |
 | HIGH | Mutating Set/Map in-place — reassign: `this.state.ids = new Set(...)` |

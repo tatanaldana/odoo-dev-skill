@@ -51,13 +51,16 @@ class TestMyModelSecurity(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # v17/v18: 'groups_id' -- v19: renamed to 'group_ids' (see
+        # odoo-security-guide-19.md). Using 'groups_id' on v19 raises
+        # ValueError: Invalid field 'groups_id' in 'res.users'.
         cls.user_basic = cls.env['res.users'].create({
             'name': 'Basic', 'login': 'basic',
-            'groups_id': [(6, 0, [cls.env.ref('my_module.group_user').id])],
+            'group_ids': [(6, 0, [cls.env.ref('my_module.group_user').id])],
         })
         cls.user_manager = cls.env['res.users'].create({
             'name': 'Manager', 'login': 'manager',
-            'groups_id': [(6, 0, [cls.env.ref('my_module.group_manager').id])],
+            'group_ids': [(6, 0, [cls.env.ref('my_module.group_manager').id])],
         })
 
     def test_basic_cannot_unlink(self):

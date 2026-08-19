@@ -45,7 +45,8 @@ Three contexts: OWL client templates, PDF reports, email templates.
 |-----------|---------|
 | `t-if` / `t-elif` / `t-else` | Conditional |
 | `t-foreach` + `t-as` + `t-key` | Loop (key required for OWL) |
-| `t-out` | Output value (HTML-safe) — replaces `t-esc` |
+| `t-out` | Output value; escapes unless the value is wrapped in `markup()` — replaces the legacy `t-raw` (NOT `t-esc`, which is a separate, still-valid, always-escaping directive) |
+| `t-esc` | Always HTML-escapes the output. Still fully supported in v17/v18/v19 (actively used ~60-90×/branch in odoo/owl) — it is NOT deprecated |
 | `t-att-*` | Dynamic attribute (`t-att-class`, `t-att-style`) |
 | `t-attf-*` | Format string attribute (`t-attf-href="/my/{{record.id}}"`) |
 | `t-on-*` | Event handler (`t-on-click`) |
@@ -115,7 +116,7 @@ Your request <strong t-out="object.name or ''"/> has been confirmed.</div>
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | Use `t-out` not `t-esc` (deprecated) for output |
+| CRITICAL | Use `t-out` not `t-raw` (deprecated, `console.warn`s in OWL) for output. `t-esc` is a separate directive (always escapes) and is NOT deprecated — do not conflate the two |
 | CRITICAL | Always include `t-key` in `t-foreach` for OWL templates |
 | HIGH | `t-field` only works with ORM fields — use `t-out` for computed values |
 | HIGH | Separate container (iterates docs) from document (renders one doc) in reports |

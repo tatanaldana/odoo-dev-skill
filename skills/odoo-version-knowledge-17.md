@@ -11,7 +11,7 @@ Python 3.10+ | OWL 2.x
 
 - `index='trigram'`, `index='btree'`, `index='btree_not_null'`
 - `Command` class for x2many (mandatory convention)
-- `_check_company_auto = True` + `check_company=True` (available since v15)
+- `_check_company_auto = True` + `check_company=True` (long-standing, predates v17 — introduced ~Odoo 13, not a v17 novelty)
 - `SQL()` via `from odoo.tools.sql import SQL`
 - `group_operator=` on fields (→ `aggregator=` in v18)
 - Chatter: `<div class="oe_chatter">` with child fields

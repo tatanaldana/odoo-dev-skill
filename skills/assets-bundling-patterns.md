@@ -54,7 +54,7 @@
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | No `@odoo-module` in v18/v19 JS |
+| CRITICAL | Never use `@odoo-module` in new v18/v19 JS — not required (native ESM); team convention forbids it even though `odoo/tools/js_transpiler.py` still transpiles it for backward compat (harmless leftover, not a free pass to add it) |
 | HIGH | Use `web.assets_unit_tests` for Hoot tests in v18+ (not `qunit_suite_tests`) |
 | HIGH | `kpi_providers` is top-level manifest key, not inside `assets` |
 | MEDIUM | Use `**/*` not `**/*.js` to include XML/SCSS with JS |

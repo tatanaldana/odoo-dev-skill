@@ -1,6 +1,6 @@
 # OWL Components — v18 (OWL 2.x)
 
-`@odoo-module` optional. New: `autocloseDelay`, `company` service, `registry.addValidation()`.
+`@odoo-module` optional. New: `autocloseDelay`, `registry.addValidation()`. (`company` service already existed in v17 — not new here.)
 
 ---
 
@@ -21,7 +21,7 @@ export class MyDashboard extends Component {
         this.state = useState({ records: [], loading: true });
         onWillStart(async () => {
             this.state.records = await this.orm.searchRead("my.model",
-                [["company_id", "in", this.company.allowedCompanyIds]],
+                [["company_id", "in", this.company.activeCompanyIds]],
                 ["name", "state"], { limit: 80 });
             this.state.loading = false;
         });
@@ -53,3 +53,4 @@ registry.category("fields").add("star_rating", { component: StarRating, supporte
 | HIGH | Use `useService()` in `setup()` — not `this.env.services` |
 | HIGH | `onWillStart` for data loading — not `onMounted` (not awaited) |
 | MEDIUM | Reassign Set/Map after mutation for OWL reactivity |
+| INFO | `useService("company")` is removed in v19 — see `odoo-owl-components-19.md` before writing new multi-company code meant to survive the upgrade |

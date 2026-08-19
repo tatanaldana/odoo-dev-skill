@@ -48,8 +48,8 @@ Check every category below. Mark each item OK or flag with file + line reference
 For detailed breaking changes per version → load `skills/odoo-version-knowledge-{version}.md`
 
 **v17:** `@odoo-module` required, no `attrs=`, `group_operator=`
-**v18:** `aggregator=`, `<list>`, `<chatter/>`, no `@odoo-module`, `read_group()` deprecated
-**v19:** `models.Constraint()`, `models.Index()`, `from odoo.tools import SQL`, `record._cr` deprecated
+**v18:** `aggregator=`, `<list>`, `<chatter/>`, no `@odoo-module` (`read_group()` still available, not yet deprecated)
+**v19:** `models.Constraint()`, `models.Index()`, `record._cr`/`_uid`/`_context` deprecated, `read_group()` deprecated (use `_read_group`/`formatted_read_group`)
 
 ---
 

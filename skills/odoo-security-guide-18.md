@@ -2,9 +2,9 @@
 
 ## Key patterns
 
-- `SQL()` builder: `from odoo.tools.sql import SQL`
+- `SQL()` builder: `from odoo.tools.sql import SQL` — the class already exists since v17 (`odoo/tools/sql.py`); v18 just increases its use in core, it is not a new API
 - Type hints recommended, not mandatory
-- `_check_company_auto = True` + `check_company=True` (since v17)
+- `_check_company_auto = True` + `check_company=True` — long-standing core feature (added ~Odoo 13/saas~12), NOT new in v17 or v18
 - Record rules: `company_ids` in `domain_force`
 - `aggregator=` replaces `group_operator=`
 

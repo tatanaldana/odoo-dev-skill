@@ -26,9 +26,9 @@ UPGRADE ANALYSIS:
 
 ## Step 3 — Load migration guides
 
-**17→18:** `odoo-model-patterns-17-18.md`, `odoo-security-guide-17-18.md`, `odoo-module-generator-17-18.md`, `odoo-owl-components-17-18.md`
+**17→18:** `odoo-version-knowledge-17-18.md`, `odoo-model-patterns-17-18.md`, `odoo-security-guide-17-18.md`, `odoo-module-generator-17-18.md`, `odoo-owl-components-17-18.md`
 
-**18→19:** same pattern with `-18-19.md` files
+**18→19:** same pattern with `-18-19.md` files (always include `odoo-version-knowledge-18-19.md`)
 
 **17→19:** load both sets in order.
 

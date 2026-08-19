@@ -4,7 +4,7 @@
 
 - `attrs=` removed — use `invisible=`/`readonly=`/`required=` directly
 - `@api.model_create_multi` mandatory
-- `_check_company_auto = True` + `check_company=True` (available since v15)
+- `_check_company_auto = True` + `check_company=True` — long-standing core feature (added ~Odoo 13/saas~12), NOT new in v15 or v17
 - Record rules: `company_ids` in `domain_force`
 - SQL: parameterized `cr.execute(query, params)`
 

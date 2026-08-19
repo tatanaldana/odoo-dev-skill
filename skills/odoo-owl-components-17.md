@@ -35,11 +35,16 @@ registry.category("actions").add("my_module.dashboard", MyDashboard);
 /** @odoo-module **/
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 export class StarRating extends Component {
+    static template = "my_module.StarRating";
     static props = { ...standardFieldProps };
     get value() { return this.props.record.data[this.props.name] || 0; }
 }
 registry.category("fields").add("star_rating", { component: StarRating, supportedTypes: ["integer"] });
 ```
+
+## `company` service
+
+Already available in v17 via `useService("company")` (`addons/web/static/src/webclient/company_service.js`) — NOT new in v18. Exposes `activeCompanyIds`, `currentCompany`, `allowedCompanies`, `setCompanies()`. (In v19 this service is removed; see `odoo-owl-components-19.md`.)
 
 ## patch()
 

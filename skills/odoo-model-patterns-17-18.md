@@ -1,12 +1,12 @@
 # Model Patterns Migration — v17 → v18
 
-## Three breaking changes
+## Key changes (2 hard breaks + 1 deprecation)
 
 | Change | v17 | v18 |
 |--------|-----|-----|
-| `group_operator=` | yes | → `aggregator=` |
-| `<tree>` | yes | → `<list>` |
-| Chatter | `<div class="oe_chatter">` | → `<chatter/>` |
+| `group_operator=` | yes | deprecated → `aggregator=` (still works: `DeprecationWarning` + auto-conversion, not a hard break, verified still present in v19 too) |
+| `<tree>` | yes | → `<list>` (hard break: RNG schema only defines `list`) |
+| Chatter | `<div class="oe_chatter">` | → `<chatter/>` (old div doesn't error, but JS compiler no longer binds to it — chatter silently fails to render) |
 
 ## NOT changed (corrections)
 
@@ -40,16 +40,17 @@ date = fields.Date(aggregator='min')
 ## Migration checklist
 
 ```
-MUST FIX:
-[ ] group_operator= → aggregator=
-[ ] <tree> → <list> (all XML + view_mode)
-[ ] oe_chatter → <chatter/>
+MUST FIX (hard breaks):
+[ ] <tree> → <list> (all XML + view_mode) — RNG schema rejects <tree>
+[ ] oe_chatter → <chatter/> — old div silently fails to render, no error
 
 NO CHANGE:
 [ ] company_ids in domain_force (NOT allowed_company_ids)
 [ ] _check_company_auto (not new in v18)
+[ ] SQL import path (from odoo.tools import SQL / from odoo.tools.sql import SQL both work, v17-v19)
 
-RECOMMENDED:
+RECOMMENDED (not mandatory):
+[ ] group_operator= → aggregator= (deprecated, still functional via compat shim + DeprecationWarning)
 [ ] Adopt SQL() builder
 [ ] Add type hints
 [ ] Use SQL.identifier() for table names
@@ -61,7 +62,7 @@ RECOMMENDED:
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | `group_operator=` in v18 |
+| MEDIUM | `group_operator=` in v18 — deprecated (warns, auto-converts), not a crash |
 | CRITICAL | `<tree>` in v18 |
 | CRITICAL | `oe_chatter` div in v18 |
 | CRITICAL | `allowed_company_ids` NOT valid in `domain_force` |

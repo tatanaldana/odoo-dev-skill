@@ -102,7 +102,8 @@ Versioned families: `odoo-version-knowledge`, `odoo-model-patterns`,
 | `@odoo-module` no longer required | 17→18 |
 | `orm.readGroup()` → `orm.formattedReadGroup()` | 18→19 |
 | `_sql_constraints` → `models.Constraint()` | 18→19 |
-| SQL import: `odoo.tools.sql` → `odoo.tools` | 18→19 |
+| `read_group()` deprecated (use `_read_group`/`formatted_read_group`) | 18→19 |
+| `record._cr`/`_uid`/`_context` deprecated (use `self.env.cr`/`.uid`/`.context`) | 18→19 |
 
 Full details → `skills/odoo-version-knowledge-{from}-{to}.md`
 

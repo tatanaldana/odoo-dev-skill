@@ -11,8 +11,8 @@ Verified against account.move.line (addons/account).
 | Constraints | `_sql_constraints = [...]` | `_name_uniq = models.Constraint('unique(name)', 'msg')` |
 | Indexes | manual | `_my_idx = models.Index("(col1, col2)")` |
 | Domain class | not available | `from odoo.fields import Command, Domain` |
-| M2O bypass | not available | `bypass_search_access=True` |
-| SQL import | `from odoo.tools.sql import SQL` | `from odoo.tools import SQL` |
+| M2O bypass | `auto_join=True` (SQL-join side effect; silently removed in v19 — kwarg accepted but ignored, no warning) | `bypass_search_access=True` (explicit ir.rule bypass on the relation; not a 1:1 rename of `auto_join`) |
+| SQL import | `from odoo.tools.sql import SQL` | same; `from odoo.tools import SQL` also works — both paths have been valid since v17, no change in v19 |
 | `aggregator=` | same as v18 | same |
 | Chatter | `<chatter/>` | same |
 | Type hints | recommended | ORM-core convention, NOT mandatory in addon code |
@@ -39,8 +39,8 @@ combined = Domain.OR([domain_a, domain_b])
 move_id = fields.Many2one(comodel_name='account.move', bypass_search_access=True,
     ondelete='cascade', index=True, check_company=True)
 
-# SQL import path changed
-from odoo.tools import SQL  # NOT odoo.tools.sql
+# SQL import — shorter form, available since v17 (not a v19-only change)
+from odoo.tools import SQL  # `from odoo.tools.sql import SQL` also still works
 ```
 
 ---
@@ -199,9 +199,10 @@ class MyModel(models.Model):
 | Severity | Rule |
 |----------|------|
 | CRITICAL | `_sql_constraints` → `models.Constraint()` in v19 |
-| CRITICAL | SQL import: `from odoo.tools import SQL` (not `odoo.tools.sql`) |
 | CRITICAL | No SQL injection — never string format with user input |
 | CRITICAL | `@api.model_create_multi` mandatory |
-| CRITICAL | Type hints NOT mandatory in addon code (only 2/3700 lines in account.move.line use them) |
+| HIGH | `auto_join=True` is silently removed in v19 — the kwarg is accepted (no error/warning) but has no effect; audit any v18 field relying on it |
+| MEDIUM | Type hints NOT mandatory in addon code (only a handful of lines — ~3 of 3740 — in account.move.line use them) |
+| LOW | SQL import: `from odoo.tools import SQL` or `from odoo.tools.sql import SQL` — both valid, not version-specific |
 | HIGH | `unlink()` must guard states |
 | HIGH | `<div class="oe_chatter">` → `<chatter/>` |

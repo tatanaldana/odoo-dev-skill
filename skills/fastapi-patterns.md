@@ -162,7 +162,10 @@ router.include_router(sale_orders_router, prefix="/sale_orders")
 <record id="user_api" model="res.users">
     <field name="name">API Service Account</field>
     <field name="login">api@example.com</field>
-    <field name="groups_id" eval="[(4, ref('group_api_user'))]"/>
+    <!-- v17/v18: groups_id -- v19: renamed to group_ids (see
+         odoo-security-guide-19.md). Using groups_id on v19 raises
+         ValueError: Invalid field 'groups_id' in 'res.users'. -->
+    <field name="group_ids" eval="[(4, ref('group_api_user'))]"/>
 </record>
 ```
 

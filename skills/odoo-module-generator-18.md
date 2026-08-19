@@ -9,7 +9,7 @@ Use only for modules targeting 18.0. Do not mix with other versions.
 - `<div class="oe_chatter">` → `<chatter/>`
 - `@odoo-module` no longer required in JS
 - New: `web.assets_unit_tests` key in manifest
-- New: `export_string_translation=False` on fields
+- `export_string_translation=False` on fields — NOT new in v18: this field kwarg already exists in v17 (`odoo/fields.py`, `export_string_translation = True` default). No version-specific action needed.
 - Type hints recommended, not mandatory
 
 ---

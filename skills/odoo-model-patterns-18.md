@@ -11,7 +11,7 @@ Verified against account.move.line and account.move views (addons/account).
 | Field aggregation | `group_operator='min'` | `aggregator='min'` |
 | List view tag | `<tree>` | `<list>` |
 | Chatter | `<div class="oe_chatter">` + 3 fields | `<chatter/>` (bare tag dominant; `reload_on_attachment="True"` where needed) |
-| SQL import | `from odoo.tools.sql import SQL` | same (changes in v19) |
+| SQL import | `from odoo.tools.sql import SQL` | same; `from odoo.tools import SQL` also works — both paths valid v17→v19, no version-specific change |
 
 ## Carried from v17
 
@@ -213,10 +213,10 @@ record.write({'line_ids': [
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | `group_operator=` → `aggregator=` in v18 |
-| CRITICAL | `<tree>` → `<list>` in v18 |
-| CRITICAL | `<div class="oe_chatter">` → `<chatter/>` in v18 |
+| MEDIUM | `group_operator=` deprecated in v18 (`DeprecationWarning`, auto-converted to `aggregator=` internally — still functional, NOT a hard break); use `aggregator=` in new code |
+| CRITICAL | `<tree>` → `<list>` in v18 (RNG schema only defines `list`; `<tree>` fails view validation) |
+| CRITICAL | `<div class="oe_chatter">` → `<chatter/>` in v18 (old div is not a parse error, but the JS compiler no longer binds to it — chatter silently fails to render) |
 | CRITICAL | `@api.model_create_multi` mandatory |
-| HIGH | SQL import: `from odoo.tools.sql import SQL` (changes to `odoo.tools` in v19) |
+| LOW | SQL import: `from odoo.tools.sql import SQL` or `from odoo.tools import SQL` — both valid in v17/v18/v19, not version-specific |
 | HIGH | No raw `(0,0,{})` tuples — use `Command` class |
 | HIGH | `unlink()` must guard states |

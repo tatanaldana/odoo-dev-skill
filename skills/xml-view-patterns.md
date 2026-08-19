@@ -9,7 +9,8 @@
 | List tag | `<tree>` | `<list>` |
 | Chatter | `<div class="oe_chatter">` + 3 fields | `<chatter/>` (bare tag dominant) |
 | Visibility | `invisible="expr"` (no `attrs=`) | same |
-| `aggregator=` | `group_operator=` | `aggregator=` |
+| `aggregator=` | `group_operator=` (still works v18/19, deprecated w/ warning) | `aggregator=` |
+| Kanban card template name | `t-name="kanban-box"` (only one recognized — HARD BREAK if `"card"` used) | `t-name="card"` (v18 also accepts legacy `"kanban-box"`; v19 `"card"` only) |
 
 ---
 
@@ -123,6 +124,12 @@
 <kanban default_group_by="stage_id" class="o_kanban_small_column">
     <field name="color"/>
     <templates>
+        <!-- v17: <t t-name="kanban-box"> — v18+: <t t-name="card"> -->
+        <!-- HARD BREAK: v17's KanbanArchParser only recognizes "kanban-box" and
+             throws "Missing 'kanban-box' template." if the arch defines "card" instead
+             (confirmed in addons/web/static/src/views/kanban/kanban_arch_parser.js).
+             v18 still accepts legacy "kanban-box" (LEGACY_KANBAN_BOX_ATTRIBUTE) but
+             recommends "card"; v19 only defines KANBAN_CARD_ATTRIBUTE = "card". -->
         <t t-name="card">
             <field name="name" class="fw-bold"/>
             <field name="partner_id"/>
@@ -159,6 +166,7 @@
 | CRITICAL | No `attrs=` in v17+ — use `invisible=`/`readonly=`/`required=` directly |
 | CRITICAL | v18+: `<tree>` → `<list>` |
 | CRITICAL | v18+: `<div class="oe_chatter">` → `<chatter/>` |
+| CRITICAL | v17 kanban: template must be `t-name="kanban-box"`, NOT `t-name="card"` (v17 throws `Missing 'kanban-box' template.`) — `"card"` only works from v18 on |
 | HIGH | Never use `string=` as xpath selector — use `name=` or specific xpath |
 | HIGH | Never use positional xpath (`//field[3]`) — use named selectors |
 | MEDIUM | Always provide `name=` on `<page>` elements for xpath targeting |

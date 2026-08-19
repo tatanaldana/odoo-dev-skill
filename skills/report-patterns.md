@@ -89,7 +89,7 @@ def action_print(self):
 
 | Severity | Rule |
 |----------|------|
-| CRITICAL | v18+: `group_operator=` → `aggregator=` |
+| HIGH | v18+: `group_operator=` → `aggregator=` (deprecated with `DeprecationWarning`, NOT removed — `group_operator` still works on v18/v19 via an automatic compat shim in `odoo/orm/fields.py`, but new code should use `aggregator=`) |
 | HIGH | Separate container (iterates docs) from document (renders one) |
 | HIGH | `t-field` only for ORM fields — use `t-out` for computed values |
 | MEDIUM | SQL report models need `_auto = False` |

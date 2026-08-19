@@ -124,6 +124,8 @@ _code_unique = models.Constraint('UNIQUE(code, company_id)', 'Code must be uniqu
 _code_idx = models.Index("(code, company_id)")
 ```
 
+> **CRITICAL**: in v19, an inherited model that still carries `_sql_constraints = [...]` does NOT get an error and does NOT get the constraint — it's a silent no-op. `odoo/orm/model_classes.py` (19.0, ~line 162) only logs a warning (`"Model attribute '_sql_constraints' is no longer supported..."`); the constraint is never created in the database. This is especially dangerous when inheriting a v17/v18 module into v19 without migrating its constraints.
+
 ---
 
 ## Antipatterns
@@ -137,4 +139,4 @@ _code_idx = models.Index("(code, company_id)")
 | HIGH | Custom fields on inherited models must use `x_` prefix |
 | HIGH | List every inherited module in `depends=` |
 | MEDIUM | Never use positional xpath (`//field[3]`) |
-| MEDIUM | v19: don't mix `_sql_constraints` and `models.Constraint()` |
+| CRITICAL | v19: `_sql_constraints` left on a model is a silent no-op (warning only, constraint never created in DB) — must migrate to `models.Constraint()`/`models.Index()` |

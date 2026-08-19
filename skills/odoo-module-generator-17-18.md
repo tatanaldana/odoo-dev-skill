@@ -3,16 +3,20 @@
 ## Breaking changes checklist
 
 ```
-MUST FIX:
-[ ] group_operator= → aggregator= on all fields
-[ ] <tree> → <list> in all XML (views + inside One2many)
+MUST FIX (hard breaks — confirmed against v18 source):
+[ ] <tree> → <list> in all XML (views + inside One2many) — ir.ui.view `type` selection only accepts 'list' in v18, 'tree' is rejected
 [ ] view_mode: tree,form → list,form
-[ ] <div class="oe_chatter"> → <chatter/> (bare tag default)
+[ ] <div class="oe_chatter"> → <chatter/> (bare tag) — mail's form_compiler.js now looks for a `<chatter/>` tag, not `div.oe_chatter`; old markup silently loses the chatter
 [ ] Do NOT rename existing ir.ui.view record ids (breaks inheritors)
+
+SOFT DEPRECATION (still works in v18, only logs a warning — fix when convenient, not urgent):
+[ ] group_operator= → aggregator= on all fields (auto-remapped internally with a DeprecationWarning; not a hard break in v18)
 
 NO CHANGE NEEDED:
 [ ] Record rules: company_ids unchanged (do NOT replace with allowed_company_ids)
 [ ] _check_company_auto — already available in v17
+[ ] read_group() — still fully available and NOT deprecated in v18 (it only gets @api.deprecated in v19 — see odoo-module-generator-18-19.md)
+[ ] export_string_translation — already available since v17, not new in v18
 
 RECOMMENDED:
 [ ] Remove /** @odoo-module **/ from JS
@@ -26,11 +30,11 @@ RECOMMENDED:
 
 | Feature | v17 | v18 |
 |---------|-----|-----|
-| `group_operator=` | yes | → `aggregator=` |
-| `<tree>` | yes | → `<list>` |
-| `oe_chatter` div | yes | → `<chatter/>` |
+| `group_operator=` | yes | deprecated (warning only) → `aggregator=` |
+| `<tree>` | yes | removed → `<list>` (hard break) |
+| `oe_chatter` div | yes | removed → `<chatter/>` (hard break) |
 | `@odoo-module` JS | required | optional |
-| `read_group()` | available | deprecated → `_read_group()` |
-| `SQL()` import | `odoo.tools.sql` | same (→ `odoo.tools` in v19) |
+| `read_group()` | available | still available, not deprecated yet (deprecated only in v19) |
+| `SQL` import | `from odoo.tools import SQL` or `from odoo.tools.sql import SQL` (both work) | same — no change; both still work in v19 too |
 
 For full patterns → see `odoo-model-patterns-17-18.md`

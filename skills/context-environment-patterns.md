@@ -4,10 +4,13 @@
 
 ## Version differences
 
+| Feature | v17 | v18/v19 |
+|---------|-----|---------|
+| Translation | `from odoo import _` only | `from odoo import _` still works; `self.env._()` also valid (added in v18, `Environment._` in `odoo/api.py`) |
+
 | Feature | v17/v18 | v19 |
 |---------|---------|-----|
-| Translation | `from odoo import _` | both `_()` and `self.env._()` valid |
-| `bypass_search_access` | — | new on M2O fields |
+| `bypass_search_access` | — | new, on all relational fields (`Many2one`, `One2many`, `Many2many` — defined on the shared `_Relational` base class, not just M2O) |
 | Everything else | identical | identical |
 
 ---

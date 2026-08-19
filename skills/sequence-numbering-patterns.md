@@ -27,13 +27,16 @@ name = fields.Char(required=True, copy=False, default=lambda self: _('New'))
 def create(self, vals_list):
     for vals in vals_list:
         if vals.get('name', _("New")) == _("New"):
-            # v18/v19: with_company inline
             vals['name'] = self.env['ir.sequence'].with_company(
                 vals.get('company_id')).next_by_code('my.model') or _("New")
     return super().create(vals_list)
 ```
 
-v17 difference: `self = self.with_company(vals['company_id'])` on separate line before sequence call.
+Both the inline form (`self.env['ir.sequence'].with_company(...).next_by_code(...)`) and the
+separate-line form (`self = self.with_company(...)`) are valid on v17, v18, and v19 — this is
+a style choice, not a version-gated API change. Confirmed identically present in core across
+all three branches (e.g. `odoo/addons/purchase_requisition/models/purchase_requisition.py`,
+`odoo/addons/product/models/product_template.py`). `with_company()` itself has not changed.
 
 ## API reference
 
@@ -49,5 +52,4 @@ seq_record.next_by_id()                             # by record (requires access
 | Severity | Rule |
 |----------|------|
 | CRITICAL | Guard with `_("New")` sentinel — don't consume sequence on imports/copy |
-| HIGH | v18/v19: `with_company()` inline on env call, not `self = self.with_company()` |
 | HIGH | `noupdate="1"` required — otherwise module update resets counter |

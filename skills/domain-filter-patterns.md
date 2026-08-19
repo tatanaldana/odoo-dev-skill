@@ -32,6 +32,8 @@ combined = expression.AND([domain_a, domain_b])
 either = expression.OR([domain_a, domain_b])
 ```
 
+> `expression.AND`/`OR` still exist and still work in v19 (`odoo/osv/expression.py`, confirmed via `git show 19.0:odoo/osv/expression.py`) — they are soft-deprecated (`warnings.warn("Since 19.0, use odoo.fields.Domain", DeprecationWarning)`), not removed. Prefer `Domain` in new v19 code, but don't treat `expression` as broken/unavailable in v19.
+
 ## Domain object (v19)
 
 ```python

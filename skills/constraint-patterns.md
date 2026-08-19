@@ -13,6 +13,8 @@ SQL constraints + Python constraints + company validation.
 | `@api.constrains` | identical | identical |
 | `_check_company_auto` | available since v17 | same |
 
+> **CRITICAL — v19 silent breakage**: leaving `_sql_constraints = [...]` on a model in v19 is **not** a compatibility shim — it is a silent no-op. `odoo/orm/model_classes.py` (19.0, lines ~162-164) only logs `_logger.warning("Model attribute '_sql_constraints' is no longer supported, please define models.Constraint on the model.")`; the constraint is **never added to the database**. Confirmed via `git show 19.0:odoo/orm/model_classes.py`. Any model migrated to v19 that still uses the old list must be converted to `models.Constraint()`/`models.Index()` or the check is silently dropped in production.
+
 ---
 
 ## SQL constraints (v17/v18)

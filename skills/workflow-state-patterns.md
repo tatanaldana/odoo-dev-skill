@@ -93,7 +93,16 @@ class Task(models.Model):
 
     @api.model
     def _read_group_stage_ids(self, stages, domain, order):
-        return self.env['my.task.stage'].search([])
+        # v17 signature: (self, stages, domain, order)
+        return self.env['my.task.stage'].search([], order=order)
+
+    # v18/v19 signature drops `order` — the ORM dispatcher (odoo/models.py in
+    # v18, odoo/orm/models.py in v19, `_read_group_expand_full`) calls
+    # group_expand(self, groups, domain) with only 2 args. Using the v17
+    # 3-arg signature in v18+ raises a TypeError.
+    # @api.model
+    # def _read_group_stage_ids(self, stages, domain):
+    #     return self.env['my.task.stage'].search([])
 
 class TaskStage(models.Model):
     _name = 'my.task.stage'
@@ -132,6 +141,7 @@ def _cron_check_expiry(self):
 |----------|------|
 | CRITICAL | No `attrs=` in v17+ |
 | CRITICAL | v18+: `<tree>` → `<list>`, `oe_chatter` → `<chatter/>` |
+| CRITICAL | `group_expand` callback signature: `(self, stages, domain, order)` in v17 vs `(self, stages, domain)` in v18/v19 — mismatched signature raises `TypeError` |
 | HIGH | Always guard state transitions (check current state before writing) |
 | HIGH | `tracking=True` without `mail.thread` inheritance has no effect |
 | MEDIUM | Don't use `ensure_one()` on multi-record action methods — iterate instead |

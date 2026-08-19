@@ -9,12 +9,12 @@ Full stack: portal.mixin on model, CustomerPortal controller, portal home, QWeb 
 | Feature | v17 | v18 | v19 |
 |---------|-----|-----|-----|
 | `_get_access_action` | `check_access_rights` + `check_access_rule` (2 calls) | `check_access('read')` (1 call) | same as v18 |
-| `_get_share_url` | no access check before token | adds `check_access('read')` | same as v18 |
+| `_get_share_url` | no access check before token | same as v17 (no check) | adds `check_access('read')` before token |
 | Language selector | `languages` list of tuples | `frontend_languages` dict | same as v18 |
 | Pager icons | `fa fa-chevron-*` | same | `oi oi-chevron-*` |
 | Pager ellipsis | not available | not available | `page['num']` can be `'…'` |
-| Backend link | `/web` | same | `/odoo` |
-| Portal home | only Connection & Security | removes spinner | adds Addresses card |
+| Backend link | `/web` | `/odoo` | same as v18 |
+| Portal home | only Connection & Security; spinner present | same (spinner still present) | adds Addresses card; spinner still present |
 | `t-nocache` on dropdown | yes | yes | removed |
 
 ---
